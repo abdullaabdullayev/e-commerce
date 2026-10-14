@@ -35,17 +35,3 @@ out/
 
 ### VS Code ###
 .vscode/
-
-# Application properties/yaml config files
-!**/src/main/resources/application.yaml
-!**/src/main/resources/application.yml
-!**/src/main/resources/application-*.yaml
-!**/src/main/resources/application-*.yml
-!**/src/main/resources/application.properties
-
-# Docker Compose files
-docker-compose.yaml
-docker-compose.yml
-docker-compose.override.yaml
-docker-compose.override.yml
-*.env
