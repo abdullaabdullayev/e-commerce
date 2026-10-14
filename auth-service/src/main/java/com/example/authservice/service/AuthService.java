@@ -55,6 +55,7 @@ public class AuthService {
 
         return RegisterResponse.builder()
                 .id(profile.getId())
+                .accountId(profile.getAccountId())
                 .email(profile.getEmail())
                 .firstName(profile.getFirstName())
                 .lastName(profile.getLastName())
