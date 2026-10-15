@@ -6,8 +6,12 @@ services:
     container_name: postgres-auth
     environment:
       POSTGRES_DB: auth_db
+
+#   This username and password not used in this project.
+#   It's changed for GitHub push. Please change it duiring installation.
       POSTGRES_USER: my_username
       POSTGRES_PASSWORD: my_password
+
     ports:
       - "5432:5432"
     volumes:
@@ -18,8 +22,12 @@ services:
     container_name: postgres-user
     environment:
       POSTGRES_DB: user_db
+
+#   This username and password not used in this project.
+#   It's changed for GitHub push. Please change it duiring installation.
       POSTGRES_USER: my_username
       POSTGRES_PASSWORD: my_password
+
     ports:
       - "5433:5432"
     volumes:
