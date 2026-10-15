@@ -34,9 +34,6 @@
       <module name="e-commerce.gateway-service" options="-parameters" />
       <module name="e-commerce.gateway-service.main" options="-parameters" />
       <module name="e-commerce.gateway-service.test" options="-parameters" />
-      <module name="e-commerce.user-api" options="-parameters" />
-      <module name="e-commerce.user-api.main" options="-parameters" />
-      <module name="e-commerce.user-api.test" options="-parameters" />
       <module name="e-commerce.user-service" options="-parameters" />
       <module name="e-commerce.user-service.main" options="-parameters" />
       <module name="e-commerce.user-service.test" options="-parameters" />
