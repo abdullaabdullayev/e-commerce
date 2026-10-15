@@ -31,12 +31,18 @@
       <module name="e-commerce.discovery-service" options="-parameters" />
       <module name="e-commerce.discovery-service.main" options="-parameters" />
       <module name="e-commerce.discovery-service.test" options="-parameters" />
+      <module name="e-commerce.gateway-service" options="-parameters" />
+      <module name="e-commerce.gateway-service.main" options="-parameters" />
+      <module name="e-commerce.gateway-service.test" options="-parameters" />
       <module name="e-commerce.user-api" options="-parameters" />
       <module name="e-commerce.user-api.main" options="-parameters" />
       <module name="e-commerce.user-api.test" options="-parameters" />
       <module name="e-commerce.user-service" options="-parameters" />
       <module name="e-commerce.user-service.main" options="-parameters" />
       <module name="e-commerce.user-service.test" options="-parameters" />
+      <module name="gateway-service" options="-parameters" />
+      <module name="gateway-service.main" options="-parameters" />
+      <module name="gateway-service.test" options="-parameters" />
     </option>
   </component>
 </project>
