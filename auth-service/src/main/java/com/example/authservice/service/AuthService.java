@@ -5,12 +5,11 @@ import com.example.authservice.dto.AuthResponse;
 import com.example.authservice.dto.LoginRequest;
 import com.example.authservice.dto.RegisterRequest;
 import com.example.authservice.dto.RegisterResponse;
+import com.example.authservice.messaging.UserEventPublisher;
 import com.example.authservice.model.Account;
 import com.example.authservice.model.RefreshToken;
 import com.example.authservice.repository.AccountRepository;
-import com.example.user.api.client.UserClient;
-import com.example.user.api.dto.CreateProfileRequest;
-import com.example.user.api.dto.UserProfileDto;
+import com.example.user.api.event.UserRegisteredEvent;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,7 +26,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
-    private final UserClient userClient;
+    private final UserEventPublisher userEventPublisher;
 
     @Transactional
     public RegisterResponse register(RegisterRequest request){
@@ -44,21 +43,18 @@ public class AuthService {
 
         Account savedAccount = accountRepository.save(account);
 
-        CreateProfileRequest profileRequest = CreateProfileRequest.builder()
+        userEventPublisher.publishUserRegistered(new UserRegisteredEvent(
+                savedAccount.getId(),
+                savedAccount.getEmail(),
+                request.getFirstName(),
+                request.getLastName()
+        ));
+
+        return RegisterResponse.builder()
                 .accountId(savedAccount.getId())
                 .email(savedAccount.getEmail())
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .build();
-
-        UserProfileDto profile = userClient.createProfile(profileRequest);
-
-        return RegisterResponse.builder()
-                .id(profile.getId())
-                .accountId(profile.getAccountId())
-                .email(profile.getEmail())
-                .firstName(profile.getFirstName())
-                .lastName(profile.getLastName())
                 .build();
     }
 
