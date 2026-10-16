@@ -17,10 +17,6 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
-    implementation 'org.projectlombok:lombok:1.18.42'
-    annotationProcessor 'org.projectlombok:lombok:1.18.42'
-}
 
 jar {
     enabled = true

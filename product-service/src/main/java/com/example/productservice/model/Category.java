@@ -11,7 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collation = "categories")
+@Document(collection = "categories")
 public class Category {
 
     @Id
