@@ -1,5 +1,6 @@
 server:
   port: 8083
+  address: 127.0.0.1
 
 spring:
   application:
@@ -12,6 +13,7 @@ eureka:
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${random.value}
+    ip-address: 127.0.0.1
     hostname: localhost
   client:
     service-url:
