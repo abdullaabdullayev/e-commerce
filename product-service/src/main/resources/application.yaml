@@ -8,6 +8,7 @@ spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017/product_db
+      auto-index-creation: true
 
 eureka:
   instance:
