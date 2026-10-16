@@ -1,20 +1,21 @@
-# Warning!!!
+  # Warning!!!
 # These usernames and passwords not used in this project.
 # It's changed for GitHub push. Please change it duiring installation.
-
-version: '3.8'
 
 services:
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: rabbitmq
+    hostname: rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: my_rabbit_user
       RABBITMQ_DEFAULT_PASS: my_rabbit_password
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
 
   postgres-auth:
     image: postgres:16-alpine
@@ -41,7 +42,16 @@ services:
       - "5433:5432"
     volumes:
       - user_db_data:/var/lib/postgresql/data
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
 
 volumes:
   auth_db_data:
   user_db_data:
+  rabbitmq_data:
+  mongo_data:
