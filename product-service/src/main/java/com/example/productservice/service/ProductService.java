@@ -6,6 +6,8 @@ import com.example.productservice.model.Product;
 import com.example.productservice.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -35,5 +37,17 @@ public class ProductService {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "Sku already exists: " + request.sku());
         }
+    }
+
+    public ProductResponse findById(String id){
+        return productRepository.findById(id)
+                .map(ProductResponse::from)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Product not found: " + id));
+    }
+
+    public Page<ProductResponse> getAll(Pageable pageable){
+        return productRepository.findByActiveTrue(pageable)
+                .map(ProductResponse::from);
     }
 }

@@ -19,9 +19,15 @@ spring:
               predicates:
                 - Path=/api/v1/users/**
 
+            - id: product-service
+              uri: lb://PRODUCT-SERVICE
+              predicates:
+                - Path=/api/v1/products/**
+
 eureka:
   instance:
     prefer-ip-address: true
+    ip-address: 127.0.0.1
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
