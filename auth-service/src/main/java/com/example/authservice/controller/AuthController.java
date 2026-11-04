@@ -5,7 +5,6 @@ import com.example.authservice.dto.LoginRequest;
 import com.example.authservice.dto.RegisterRequest;
 import com.example.authservice.dto.RegisterResponse;
 import com.example.authservice.service.AuthService;
-import com.example.user.api.dto.UserProfileDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

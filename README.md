@@ -4,6 +4,8 @@
 
 A microservices-based e-commerce backend built with Spring Boot and Spring Cloud.
 
+Step-by-step learning: [Reliable registration with RabbitMQ and an outbox](docs/registration-flow.md).
+
 ## Services
 
 | Service             | Port | Description                                              |
