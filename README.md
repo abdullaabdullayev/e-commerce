@@ -6,6 +6,12 @@ A microservices-based e-commerce backend built with Spring Boot and Spring Cloud
 
 Step-by-step learning: [Reliable registration with RabbitMQ and an outbox](docs/registration-flow.md).
 
+Sales business logic: [Product catalog rules and API](docs/product-catalog.md).
+
+Stock and checkout: [Inventory and order business flow](docs/sales-flow.md).
+
+Deployment: [External access through Gateway only](docs/gateway-access.md).
+
 ## Services
 
 | Service             | Port | Description                                              |
@@ -30,13 +36,11 @@ Step-by-step learning: [Reliable registration with RabbitMQ and an outbox](docs/
 - JDK 21
 - Docker (for PostgreSQL)
 
-### 1. Start the databases
+### 1. Configure the environment
 
-```bash
-docker compose up -d
-```
-
-This starts two PostgreSQL instances: `auth_db` on port `5432` and `user_db` on port `5433`.
+Create `.env` using `.env.example`. Set the JWT secret and service keys, and keep
+database/RabbitMQ credentials consistent with existing volumes. Compose runs the
+whole application in a private network; only Gateway's port 8080 is published.
 
 ### 2. Set environment variables
 
@@ -48,13 +52,16 @@ This starts two PostgreSQL instances: `auth_db` on port `5432` and `user_db` on 
 | `ACCESS_EXPIRATION`  | `auth-service`               | Access token lifetime in milliseconds        |
 | `REFRESH_EXPIRATION` | `auth-service`               | Refresh token lifetime in milliseconds       |
 
-### 3. Run the services
+### 3. Run the services through Docker
 
-Start them in this order:
+```bash
+docker compose config --quiet
+docker compose up -d --build
+```
 
-1. `discovery-service`
-2. `user-service`
-3. `auth-service`
+Send requests to `http://localhost:8080/api/v1/...`. Stop any copies previously
+started through the IDE; container isolation does not close host Java processes.
+See [gateway access](docs/gateway-access.md) for internal networking and configuration.
 
 ## API (current)
 

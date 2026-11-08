@@ -25,7 +25,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
+// The disposable container removes the database; do not run DROP after it stops.
+@DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=create")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({UserEventPublisher.class, OutboxPersistenceTest.JsonConfig.class})
 @Testcontainers(disabledWithoutDocker = true)
