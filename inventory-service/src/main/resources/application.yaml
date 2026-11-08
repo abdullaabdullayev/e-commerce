@@ -1,0 +1,23 @@
+server:
+  port: 8084
+  address: 127.0.0.1
+spring:
+  application:
+    name: inventory-service
+  datasource:
+    url: ${INVENTORY_DB_URL:jdbc:postgresql://localhost:5434/inventory_db}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  mvc:
+    problemdetails:
+      enabled: true
+inventory:
+  service-key: ${INVENTORY_SERVICE_KEY:}
+  reservation-seconds: 300
+eureka:
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

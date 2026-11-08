@@ -1,57 +1,246 @@
-  # Warning!!!
-# These usernames and passwords not used in this project.
-# It's changed for GitHub push. Please change it duiring installation.
+# Only Gateway publishes a host port. Other ports are container-internal.
+x-app: &app
+  restart: unless-stopped
+  networks:
+    - backend
+
+x-app-env: &app-env
+  SERVER_ADDRESS: 0.0.0.0
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+  EUREKA_INSTANCE_PREFERIPADDRESS: "false"
+
+x-db-env: &db-env
+  DB_USERNAME: ${DB_USERNAME:-my_username}
+  DB_PASSWORD: ${DB_PASSWORD:-my_password}
+  SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-my_username}
+  SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-my_password}
+
+x-rabbit-env: &rabbit-env
+  SPRING_RABBITMQ_HOST: rabbitmq
+  SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-my_rabbit_user}
+  SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-my_rabbit_password}
+
+x-postgres: &postgres
+  image: postgres:16-alpine
+  restart: unless-stopped
+  networks:
+    - backend
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+    interval: 5s
+    timeout: 3s
+    retries: 20
 
 services:
+  discovery-service:
+    <<: *app
+    build:
+      context: .
+      args:
+        SERVICE: discovery-service
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      EUREKA_INSTANCE_HOSTNAME: discovery-service
+
+  gateway-service:
+    <<: *app
+    build:
+      context: .
+      args:
+        SERVICE: gateway-service
+    environment:
+      <<: *app-env
+      EUREKA_INSTANCE_HOSTNAME: gateway-service
+    ports:
+      - "${GATEWAY_BIND_ADDRESS:-127.0.0.1}:${GATEWAY_PORT:-8080}:8080"
+    networks:
+      - edge
+      - backend
+    depends_on:
+      discovery-service:
+        condition: service_started
+
+  auth-service:
+    <<: *app
+    build:
+      context: .
+      args:
+        SERVICE: auth-service
+    environment:
+      <<: [*app-env, *db-env, *rabbit-env]
+      EUREKA_INSTANCE_HOSTNAME: auth-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/auth_db
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env (at least 32 bytes)}
+      SPRING_JWT_SECRET: ${SECRET_KEY:?Set SECRET_KEY in .env (at least 32 bytes)}
+      ACCESS_EXPIRATION: ${ACCESS_EXPIRATION:-900000}
+      REFRESH_EXPIRATION: ${REFRESH_EXPIRATION:-604800000}
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      discovery-service:
+        condition: service_started
+
+  user-service:
+    <<: *app
+    build:
+      context: .
+      args:
+        SERVICE: user-service
+    environment:
+      <<: [*app-env, *db-env, *rabbit-env]
+      EUREKA_INSTANCE_HOSTNAME: user-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/user_db
+    depends_on:
+      postgres-user:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      discovery-service:
+        condition: service_started
+
+  product-service:
+    <<: *app
+    build:
+      context: .
+      args:
+        SERVICE: product-service
+    environment:
+      <<: *app-env
+      EUREKA_INSTANCE_HOSTNAME: product-service
+      # Override the old localhost host name as well as prefer-ip-address.
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/product_db
+      CATALOG_ADMIN_KEY: ${CATALOG_ADMIN_KEY:?Set CATALOG_ADMIN_KEY in .env}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      discovery-service:
+        condition: service_started
+
+  inventory-service:
+    <<: *app
+    build:
+      context: .
+      args:
+        SERVICE: inventory-service
+    environment:
+      <<: [*app-env, *db-env]
+      EUREKA_INSTANCE_HOSTNAME: inventory-service
+      INVENTORY_DB_URL: jdbc:postgresql://postgres-inventory:5432/inventory_db
+      INVENTORY_SERVICE_KEY: ${INVENTORY_SERVICE_KEY:?Set INVENTORY_SERVICE_KEY in .env}
+    depends_on:
+      postgres-inventory:
+        condition: service_healthy
+      discovery-service:
+        condition: service_started
+
+  order-service:
+    <<: *app
+    build:
+      context: .
+      args:
+        SERVICE: order-service
+    environment:
+      <<: [*app-env, *db-env]
+      EUREKA_INSTANCE_HOSTNAME: order-service
+      ORDER_DB_URL: jdbc:postgresql://postgres-order:5432/order_db
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env (at least 32 bytes)}
+      ORDER_SERVICE_KEY: ${ORDER_SERVICE_KEY:?Set ORDER_SERVICE_KEY in .env}
+      INVENTORY_SERVICE_KEY: ${INVENTORY_SERVICE_KEY:?Set INVENTORY_SERVICE_KEY in .env}
+      PRODUCT_SERVICE_URL: http://product-service:8083
+      INVENTORY_SERVICE_URL: http://inventory-service:8084
+    depends_on:
+      postgres-order:
+        condition: service_healthy
+      product-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+      discovery-service:
+        condition: service_started
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: rabbitmq
     hostname: rabbitmq
+    restart: unless-stopped
     environment:
-      RABBITMQ_DEFAULT_USER: my_rabbit_user
-      RABBITMQ_DEFAULT_PASS: my_rabbit_password
-    ports:
-      - "5672:5672"
-      - "15672:15672"
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-my_rabbit_user}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-my_rabbit_password}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
 
   postgres-auth:
-    image: postgres:16-alpine
+    <<: *postgres
     container_name: postgres-auth
     environment:
       POSTGRES_DB: auth_db
-      POSTGRES_USER: my_username
-      POSTGRES_PASSWORD: my_password
-
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${DB_USERNAME:-my_username}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-my_password}
     volumes:
       - auth_db_data:/var/lib/postgresql/data
 
   postgres-user:
-    image: postgres:16-alpine
+    <<: *postgres
     container_name: postgres-user
     environment:
       POSTGRES_DB: user_db
-      POSTGRES_USER: my_username
-      POSTGRES_PASSWORD: my_password
-
-    ports:
-      - "5433:5432"
+      POSTGRES_USER: ${DB_USERNAME:-my_username}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-my_password}
     volumes:
       - user_db_data:/var/lib/postgresql/data
+
+  postgres-inventory:
+    <<: *postgres
+    environment:
+      POSTGRES_DB: inventory_db
+      POSTGRES_USER: ${DB_USERNAME:-my_username}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-my_password}
+    volumes:
+      - inventory_db_data:/var/lib/postgresql/data
+
+  postgres-order:
+    <<: *postgres
+    environment:
+      POSTGRES_DB: order_db
+      POSTGRES_USER: ${DB_USERNAME:-my_username}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-my_password}
+    volumes:
+      - order_db_data:/var/lib/postgresql/data
+
   mongo:
     image: mongo:7
     container_name: mongo
-    ports:
-      - "27017:27017"
+    restart: unless-stopped
     volumes:
       - mongo_data:/data/db
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "if (!db.adminCommand({ping:1}).ok) quit(1)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+networks:
+  edge:
+    driver: bridge
+  backend:
+    driver: bridge
+    internal: true
 
 volumes:
   auth_db_data:
   user_db_data:
   rabbitmq_data:
   mongo_data:
+  inventory_db_data:
+  order_db_data:

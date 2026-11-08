@@ -1,0 +1,15 @@
+.git
+.idea
+.codex
+.agents
+.aws
+.gradle
+**/.gradle
+**/build
+**/out
+**/node_modules
+**/*.log
+.env
+.env.*
+**/*.env
+scripts

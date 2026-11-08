@@ -102,8 +102,35 @@ JDK 21 və Gradle wrapper ilə layihənin kökündən:
 - `UserProfileDeliveryTest`: real PostgreSQL-də paralel təkrar çatdırılma və email konflikti.
 
 Son iki sinif Testcontainers istifadə edir; Docker işləmədikdə skip olunur.
-Bu testlər RabbitMQ ilə tam end-to-end yoxlamanı əvəz etmir; yuxarıdakı lokal
-sınaq brokerin dayanma/bərpa axınını yoxlamaq üçündür.
+Bu testlər RabbitMQ ilə tam end-to-end yoxlamanı əvəz etmir.
+
+## Real servislərlə avtomatik yoxlama (Windows / PowerShell)
+
+Docker Desktop işləsin və `JAVA_HOME` JDK 21 qovluğunu göstərsin:
+
+```powershell
+.\gradlew.bat :auth-service:bootJar :user-service:bootJar
+.\scripts\Test-Registration.ps1
+```
+
+Alternativ olaraq JDK yolunu `-JavaHome` parametri ilə verə bilərsən.
+Skript iki ayrı PostgreSQL və bir RabbitMQ konteyneri yaradır, Auth və User
+tətbiqlərini ayrıca Java prosesləri kimi müvəqqəti portlarda başladır.
+İlk icrada Docker imiclərinin endirilməsi vaxt apara bilər.
+
+Yoxlamalar:
+
+1. Real HTTP sorğusu ilə qeydiyyat hesab və profil yaradır.
+2. RabbitMQ dayandırıldıqda qeydiyyat yenə `201` qaytarır; hadisə outbox-da qalır.
+3. RabbitMQ bərpa ediləndə gözləyən hadisə çatdırılır və profil yaranır.
+4. Eyni qeydiyyat hadisəsi iki dəfə göndərildikdə profil çoxalmır və mesajlar DLQ-ya düşmür.
+
+Təkrar mesajlardan sonra ayrıca marker qeydiyyatı edilir. Tək consumer-in həmin
+markerə çatması əvvəlki mesajların emal edildiyini yoxlayır.
+Skript həm uğurda, həm də xətada yalnız öz yaratdığı proses və konteynerləri
+təmizləyir. Mövcud Compose bazalarını və volume-larını dəyişmir.
+Loglar `build/registration-check/<run-id>/` qovluğunda qalır.
+Bu sınaq Gateway, Eureka və frontend-i əhatə etmir.
 
 Hazırkı layihənin `ddl-auto: update` ayarı lokal development üçün yeni outbox
 cədvəlini yaradır. Production üçün versiyalanmış DB migration-ları ayrıca hazırlanmalıdır.

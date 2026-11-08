@@ -10,13 +10,13 @@ import java.util.List;
 import java.util.Map;
 
 public record CreateProductRequest(
-        @NotBlank String name,
-        String description,
-        @NotBlank String sku,
-        @NotBlank String categoryId,
-        String brandId,
+        @NotBlank @Size(max = 200) String name,
+        @Size(max = 10000) String description,
+        @NotBlank @Size(max = 80) String sku,
+        @NotBlank @Size(max = 100) String categoryId,
+        @Size(max = 100) String brandId,
         @NotNull @Positive BigDecimal price,
         @NotBlank @Size(min = 3, max = 3) String currency,
-        List<String> images,
-        Map<String, Object> attributes
+        @Size(max = 20) List<@NotBlank @Size(max = 2048) String> images,
+        @Size(max = 50) Map<String, Object> attributes
         ) {}

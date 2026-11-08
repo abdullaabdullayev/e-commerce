@@ -5,6 +5,9 @@ server:
 spring:
   application:
     name: product-service
+  mvc:
+    problemdetails:
+      enabled: true
   data:
     mongodb:
       uri: mongodb://localhost:27017/product_db
@@ -12,6 +15,9 @@ spring:
     web:
       pageable:
         max-page-size: 100
+
+catalog:
+  admin-key: ${CATALOG_ADMIN_KEY:}
 
 eureka:
   instance:
