@@ -12,6 +12,9 @@ Stock and checkout: [Inventory and order business flow](docs/sales-flow.md).
 
 Deployment: [External access through Gateway only](docs/gateway-access.md).
 
+Frontend: [Next.js + TypeScript + Tailwind CSS](frontend/README.md). Run `npm run dev`
+inside `frontend` and open `http://localhost:3000`.
+
 ## Services
 
 | Service             | Port | Description                                              |
