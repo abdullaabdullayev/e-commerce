@@ -1,0 +1,37 @@
+# IDE-only access to infrastructure. Application service ports stay unpublished.
+# Use with: docker compose -f docker-compose.yaml -f compose.ide.yaml up -d
+# Reapply only docker-compose.yaml to remove these loopback bindings.
+x-ide-networks: &ide-networks
+  backend: {}
+  ide-access:
+    gw_priority: 1
+
+services:
+  postgres-auth:
+    networks: *ide-networks
+    ports:
+      - "127.0.0.1:5432:5432"
+  postgres-user:
+    networks: *ide-networks
+    ports:
+      - "127.0.0.1:5433:5432"
+  postgres-inventory:
+    networks: *ide-networks
+    ports:
+      - "127.0.0.1:5434:5432"
+  postgres-order:
+    networks: *ide-networks
+    ports:
+      - "127.0.0.1:5435:5432"
+  rabbitmq:
+    networks: *ide-networks
+    ports:
+      - "127.0.0.1:5672:5672"
+  mongo:
+    networks: *ide-networks
+    ports:
+      - "127.0.0.1:27017:27017"
+
+networks:
+  ide-access:
+    driver: bridge

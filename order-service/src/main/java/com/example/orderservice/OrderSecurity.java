@@ -31,7 +31,7 @@ public class OrderSecurity {
     }
 
     @Bean
-    SecurityFilterChain orderSecurity(HttpSecurity http) throws Exception {
+    SecurityFilterChain orderSecurityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/internal/**", "/error").permitAll().anyRequest().authenticated())
