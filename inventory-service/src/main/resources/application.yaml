@@ -2,6 +2,8 @@ server:
   port: 8084
   address: 127.0.0.1
 spring:
+  config:
+    import: "optional:file:../.env[.properties],optional:file:./.env[.properties]"
   application:
     name: inventory-service
   datasource:
