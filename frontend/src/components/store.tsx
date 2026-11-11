@@ -8,17 +8,17 @@ import { Icon } from "./icons";
 type Store = { lines: CartLine[]; add: (product: Product, quantity?: number) => void; quantity: (id: string, value: number) => void; clear: () => void; open: () => void };
 const Context = createContext<Store | null>(null);
 export const useStore = () => { const store = useContext(Context); if (!store) throw new Error("Missing store"); return store; };
-export function StoreProvider({ children }: { children: ReactNode }) {
+export function StoreProvider({ children, mode }: { children: ReactNode; mode: Product["source"] }) {
   const [lines, setLines] = useState<CartLine[]>([]), [ready, setReady] = useState(false), [opened, setOpened] = useState(false), [notice, setNotice] = useState("");
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     try {
-      const saved: unknown = JSON.parse(localStorage.getItem("kodariun-cart-v1") || "[]");
+      const saved: unknown = JSON.parse(localStorage.getItem(`kodariun-cart-${mode}-v1`) || "[]");
       if (Array.isArray(saved)) setLines(saved.filter((line: CartLine) => line?.product?.id && typeof line.product.name === "string" && Array.isArray(line.product.images) && ["showcase", "live"].includes(line.product.source) && (line.product.price === null || (typeof line.product.price === "number" && Number.isFinite(line.product.price) && line.product.price > 0)) && Number.isInteger(line.quantity) && line.quantity > 0 && line.quantity <= 99).slice(0, 50));
     } catch { /* An invalid local cart can be replaced. */ }
     setReady(true);
-  }, []);
-  useEffect(() => { if (ready) { try { localStorage.setItem("kodariun-cart-v1", JSON.stringify(lines)); } catch { /* Private mode may disallow persistence. */ } } }, [lines, ready]);
+  }, [mode]);
+  useEffect(() => { if (ready) { try { localStorage.setItem(`kodariun-cart-${mode}-v1`, JSON.stringify(lines)); } catch { /* Private mode may disallow persistence. */ } } }, [lines, ready, mode]);
   useEffect(() => {
     if (opened) dialog.current?.showModal(); else dialog.current?.close();
     if (!opened) return;
@@ -48,7 +48,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     </dialog>
   </Context.Provider>;
 }
-export function AddToCart({ product, label = "Səbətə əlavə et", compact = false }: { product: Product; label?: string; compact?: boolean }) {
+export function AddToCart({ product, label = "Səbətə əlavə et", compact = false, disabled = false }: { product: Product; label?: string; compact?: boolean; disabled?: boolean }) {
   const { add } = useStore();
-  return <button className={compact ? "product-add" : "button"} aria-label={`${product.name} — səbətə əlavə et`} onClick={() => add(product)}>{!compact && label}<Icon name={compact ? "plus" : "bag"} /></button>;
+  return <button className={compact ? "product-add" : "button"} disabled={disabled} aria-label={`${product.name} — səbətə əlavə et`} onClick={() => add(product)}>{!compact && label}<Icon name={compact ? "plus" : "bag"} /></button>;
 }

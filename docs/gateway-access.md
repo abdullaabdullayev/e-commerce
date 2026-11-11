@@ -87,8 +87,14 @@ docker compose -f docker-compose.yaml -f compose.ide.yaml up -d postgres-auth po
 | Inventory | `jdbc:postgresql://localhost:5434/inventory_db` |
 | Order | `jdbc:postgresql://localhost:5435/order_db` |
 
-IDE Run Configuration daxilində `.env`-dəki `DB_USERNAME` və `DB_PASSWORD` dəyərləri
-ötürülməlidir. Docker servislərinə verilən `postgres-auth:5432` kimi JDBC URL-ləri
+Auth, User, Product, Inventory və Order servisləri layihənin kökündəki `.env` faylını
+avtomatik oxuyur. IDE ayrıca env file seçməsə də, layihə kökündən və ya servis
+qovluğundan başlamaq işləyir. Faylda `KEY=value` formatından istifadə et; bu import
+Java properties formatını oxuduğu üçün dəyərləri dırnağa alma. Xüsusi escape tələb edən
+dəyərləri IDE/əməliyyat sistemi environment dəyişənləri kimi ver: onlar fayldan üstündür.
+Docker image-lərinə `.env` daxil edilmir; Compose dəyişənləri əvvəlki kimi ötürür.
+
+Docker servislərinə verilən `postgres-auth:5432` kimi JDBC URL-ləri
 IDE Run Configuration-a köçürmə. Inventory/Order üçün Docker URL-ləri əvvəlcədən
 IDE environment-də təyin edilibsə, onları yuxarıdakı localhost URL-ləri ilə əvəz et.
 

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { gateway, isShowcase } from "@/lib/server";
+import { backendError } from "@/lib/api-errors";
+import { isSameOrigin } from "@/lib/request-origin";
 
 export const dynamic = "force-dynamic";
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
@@ -9,7 +11,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   const read = request.method === "GET" && /^(products(?:\/[^/]+)?|categories|stock\/[^/]+|orders(?:\/[a-f0-9-]+)?)$/.test(path);
   const write = request.method === "POST" && /^(orders|orders\/[a-f0-9-]+\/cancel)$/.test(path);
   if (!read && !write) return NextResponse.json({ detail: "Endpoint mövcud deyil." }, { status: 404 });
-  if (write && request.headers.get("origin") !== request.nextUrl.origin) return NextResponse.json({ detail: "Sorğu mənbəyi qəbul edilmir." }, { status: 403 });
+  if (write && !isSameOrigin(request)) return NextResponse.json({ detail: "Sorğu mənbəyi qəbul edilmir." }, { status: 403 });
   if (write && isShowcase()) return NextResponse.json({ detail: "Nümunə kataloqda real sifariş yaradılmır." }, { status: 409 });
   const jar = await cookies();
   const token = jar.get("kodariun_access")?.value;
@@ -25,6 +27,11 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
     });
     const text = await response.text();
     if (response.status === 401) jar.delete("kodariun_access");
+    if (!response.ok) {
+      let detail: string | undefined;
+      try { detail = JSON.parse(text).detail; } catch { /* Non-JSON errors use the status message. */ }
+      return NextResponse.json({ detail: backendError(response.status, detail) }, { status: response.status, headers: { "Cache-Control": "no-store" } });
+    }
     return new NextResponse(text || null, { status: response.status, headers: { "Content-Type": response.headers.get("content-type") || "application/json", "Cache-Control": "no-store" } });
   } catch { return NextResponse.json({ detail: "Hazırda serverə qoşulmaq mümkün olmadı. Bir az sonra yenidən yoxlayın." }, { status: 503 }); }
 }

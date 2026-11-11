@@ -34,7 +34,10 @@ Paketlər artıq yüklənibsə yalnız `npm run dev` kifayətdir. Ünvan:
 `.env.example`-dan `frontend/.env.local` yarat. Backend-in kökündəki `.env`
 avtomatik olaraq Next.js-ə tətbiq edilmir.
 
-Standart `DEMO_CATALOG=true` rejimində Instagram-dan real model şəkilləri və
+Standart rejim `DEMO_CATALOG=false`-dur: məhsullar, qiymətlər, kateqoriyalar və stok
+real backend-dən gəlir. Boş baza boş kataloq kimi göstərilir; nümunə məhsul əlavə edilmir.
+
+İstəyə bağlı `DEMO_CATALOG=true` rejimində Instagram-dan real model şəkilləri və
 məzmun göstərilir. Qiymətlər uydurulmur; mövcudluq və qiymət üçün əlaqə təklif edilir.
 Bu rejimdə səbət lokal saxlanır, real sifariş yaradılmır.
 
@@ -47,7 +50,8 @@ DEMO_CATALOG=false
 
 Environment dəyişəndən sonra dev prosesini yenidən başlat. Canlı rejimdə yalnız
 Gateway-ə sorğu gedir; frontend ayrıca Product, Inventory və Order portlarını çağırmır.
-Mağaza AZN kataloqunu səhifələmə ilə oxuyur. Backend əlçatan deyilsə real xətanı
+Mağaza AZN kataloqunu backend-in `content` + `page` cavabına uyğun səhifələmə ilə oxuyur.
+Backend əlçatan deyilsə real xətanı
 göstərir, nümunə məhsullara səssiz keçid etmir.
 
 Login və qeydiyyat da Gateway üzərindən Auth Service-ə bağlıdır. Access token
@@ -58,7 +62,29 @@ Production HTTPS reverse proxy arxasında `COOKIE_SECURE=true` təyin et.
 
 Frontend `/api/backend/` proxy-si yalnız kataloq, stok və şəxsi sifariş yollarına
 icazə verir. `/internal/` və admin açarları brauzerə ötürülmür. İdarəetmə paneli bu
-frontend mərhələsinə daxil deyil.
+frontend mərhələsinə daxil deyil. Məhsul detalında stok hər 15 saniyədən bir,
+açıq sifarişlər isə hesab səhifəsində hər 10 saniyədən bir yenilənir.
+Sifarişlər backend-in 20 elementlik səhifələrinə uyğun göstərilir.
+Nümunə və canlı kataloqun səbətləri ayrıca saxlanır.
+
+## Backend əlaqələri
+
+| Ekran / əməliyyat | Gateway API |
+|---|---|
+| Qeydiyyat, giriş | `POST /api/v1/auth/register`, `POST /api/v1/auth/login` |
+| Mağaza, axtarış, sıralama | `GET /api/v1/products?q=&categoryId=&page=&size=&sort=&currency=AZN` |
+| Kateqoriyalar | `GET /api/v1/categories` |
+| Məhsul detalı | `GET /api/v1/products/{id}` |
+| Satışa açıq say | `GET /api/v1/stock/{sku}` → `available` |
+| Rezervasiya | `POST /api/v1/orders` + `Idempotency-Key` |
+| Şəxsi sifarişlər | `GET /api/v1/orders?page=0` → 20 elementlik siyahı |
+| Rezervasiyanı ləğv etmək | `POST /api/v1/orders/{id}/cancel` |
+
+Sifarişə yalnız məhsul ID-si və say göndərilir. Qiyməti və yekun məbləği Order
+servisi müəyyən edir. Eyni sorğunun şəbəkə xətasından sonra təkrarı eyni idempotency
+açarını istifadə edir. Cavab alındıqdan sonra növbəti alış yeni açarla yaradılır.
+Qeydiyyat/login backend-də yoxlanılır: yanlış giriş `401`, mövcud email `409`,
+yanlış məlumat `400` qaytarır. UI bu statusları Azərbaycan dilində göstərir.
 
 ## Ödəniş sərhədi
 

@@ -16,6 +16,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +36,7 @@ public class AuthService {
         String email = request.getEmail();
 
         if(accountRepository.existsByEmail(email)){
-            throw new RuntimeException("Email is already in use");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already in use");
         }
 
         Account account = new Account();
