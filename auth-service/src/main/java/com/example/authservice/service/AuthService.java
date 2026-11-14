@@ -61,16 +61,16 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request){
-        String username = request.getEmail();
+        String username = request.getIdentifier();
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, request.getPassword())
         );
 
-        Account account =accountRepository.findByEmail(username)
+        Account account =accountRepository.findByIdentifier(username)
                 .orElseThrow(() -> new RuntimeException("Email not found"));
 
-        String accessToken =jwtUtil.generateAccessToken(username);
+        String accessToken =jwtUtil.generateAccessToken(account);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(account);
         return new AuthResponse(accessToken, refreshToken.getToken());
 

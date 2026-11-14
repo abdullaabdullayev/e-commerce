@@ -11,4 +11,10 @@ public interface AccountRepository extends  JpaRepository<Account, Long> {
 
     Optional<Account> findByEmail(String email);
     boolean existsByEmail(String email);
+    Optional<Account> findByUsername(String username);
+    boolean existsByUsername(String username);
+
+    default Optional<Account> findByIdentifier(String identifier) {
+        return identifier.contains("@") ? findByEmail(identifier) : findByUsername(identifier);
+    }
 }

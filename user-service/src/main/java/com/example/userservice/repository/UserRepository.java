@@ -10,6 +10,7 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User,Long> {
     Optional<User> findByAccountId(Long accountId);
+    java.util.List<User> findByAccountIdIn(java.util.Collection<Long> accountIds);
 
     @Modifying
     @Query(value = """

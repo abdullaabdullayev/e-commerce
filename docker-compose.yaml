@@ -74,6 +74,7 @@ services:
       SPRING_JWT_SECRET: ${SECRET_KEY:?Set SECRET_KEY in .env (at least 32 bytes)}
       ACCESS_EXPIRATION: ${ACCESS_EXPIRATION:-900000}
       REFRESH_EXPIRATION: ${REFRESH_EXPIRATION:-604800000}
+      AUTH_BOOTSTRAP_KEY: ${AUTH_BOOTSTRAP_KEY:-}
     depends_on:
       postgres-auth:
         condition: service_healthy
@@ -92,6 +93,8 @@ services:
       <<: [*app-env, *db-env, *rabbit-env]
       EUREKA_INSTANCE_HOSTNAME: user-service
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/user_db
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      PROFILE_SERVICE_KEY: ${PROFILE_SERVICE_KEY:?Set PROFILE_SERVICE_KEY in .env}
     depends_on:
       postgres-user:
         condition: service_healthy
@@ -160,6 +163,53 @@ services:
       discovery-service:
         condition: service_started
 
+  course-service:
+    <<: *app
+    build:
+      context: .
+      args:
+        SERVICE: course-service
+    environment:
+      <<: [*app-env, *db-env]
+      EUREKA_INSTANCE_HOSTNAME: course-service
+      COURSE_DB_URL: jdbc:postgresql://postgres-course:5432/course_db
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      AUTH_SERVICE_URL: http://auth-service:8085
+      PROFILE_SERVICE_URL: http://user-service:8081
+      PROFILE_SERVICE_KEY: ${PROFILE_SERVICE_KEY:?Set PROFILE_SERVICE_KEY in .env}
+      COURSE_STORAGE_ENDPOINT: http://course-storage:9000
+      COURSE_STORAGE_ACCESS_KEY: ${COURSE_STORAGE_ACCESS_KEY:?Set COURSE_STORAGE_ACCESS_KEY in .env}
+      COURSE_STORAGE_SECRET_KEY: ${COURSE_STORAGE_SECRET_KEY:?Set COURSE_STORAGE_SECRET_KEY in .env}
+      COURSE_STORAGE_BUCKET: course-materials
+    depends_on:
+      postgres-course:
+        condition: service_healthy
+      course-storage:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+      discovery-service:
+        condition: service_started
+
+  course-storage:
+    image: chrislusf/seaweedfs:4.53
+    command: mini -dir=/data -s3.port=9000 -s3.port.iceberg=0 -s3.port.lance=0
+    restart: unless-stopped
+    environment:
+      AWS_ACCESS_KEY_ID: ${COURSE_STORAGE_ACCESS_KEY:?Set COURSE_STORAGE_ACCESS_KEY in .env}
+      AWS_SECRET_ACCESS_KEY: ${COURSE_STORAGE_SECRET_KEY:?Set COURSE_STORAGE_SECRET_KEY in .env}
+    volumes:
+      - course_storage_data:/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:9333/cluster/status"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: rabbitmq
@@ -216,6 +266,15 @@ services:
     volumes:
       - order_db_data:/var/lib/postgresql/data
 
+  postgres-course:
+    <<: *postgres
+    environment:
+      POSTGRES_DB: course_db
+      POSTGRES_USER: ${DB_USERNAME:-my_username}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-my_password}
+    volumes:
+      - course_db_data:/var/lib/postgresql/data
+
   mongo:
     image: mongo:7
     container_name: mongo
@@ -244,3 +303,5 @@ volumes:
   mongo_data:
   inventory_db_data:
   order_db_data:
+  course_db_data:
+  course_storage_data:

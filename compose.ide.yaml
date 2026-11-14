@@ -23,6 +23,14 @@ services:
     networks: *ide-networks
     ports:
       - "127.0.0.1:5435:5432"
+  postgres-course:
+    networks: *ide-networks
+    ports:
+      - "127.0.0.1:5436:5432"
+  course-storage:
+    networks: *ide-networks
+    ports:
+      - "127.0.0.1:9000:9000"
   rabbitmq:
     networks: *ide-networks
     ports:

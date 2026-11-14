@@ -3,7 +3,7 @@ WORKDIR /workspace
 COPY . .
 RUN sed -i 's/\r$//' gradlew
 RUN chmod +x gradlew
-RUN ./gradlew --no-daemon :discovery-service:bootJar :gateway-service:bootJar :auth-service:bootJar :user-service:bootJar :product-service:bootJar :inventory-service:bootJar :order-service:bootJar
+RUN ./gradlew --no-daemon :discovery-service:bootJar :gateway-service:bootJar :auth-service:bootJar :user-service:bootJar :product-service:bootJar :inventory-service:bootJar :order-service:bootJar :course-service:bootJar
 
 FROM eclipse-temurin:21-jre
 ARG SERVICE
