@@ -1,0 +1,40 @@
+server:
+  port: 8087
+  address: 127.0.0.1
+spring:
+  application:
+    name: course-service
+  config:
+    import: "optional:file:../.env[.properties],optional:file:./.env[.properties]"
+  datasource:
+    url: ${COURSE_DB_URL:jdbc:postgresql://localhost:5436/course_db}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  mvc:
+    problemdetails:
+      enabled: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 26MB
+courses:
+  jwt-secret: ${SECRET_KEY}
+  auth-url: ${AUTH_SERVICE_URL:http://localhost:8085}
+  profile-url: ${PROFILE_SERVICE_URL:http://localhost:8081}
+  profile-key: ${PROFILE_SERVICE_KEY:}
+  storage:
+    endpoint: ${COURSE_STORAGE_ENDPOINT:http://localhost:9000}
+    access-key: ${COURSE_STORAGE_ACCESS_KEY:}
+    secret-key: ${COURSE_STORAGE_SECRET_KEY:}
+    bucket: ${COURSE_STORAGE_BUCKET:course-materials}
+eureka:
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

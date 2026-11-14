@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,
+    account_id BIGINT NOT NULL UNIQUE,
+    email VARCHAR(255) UNIQUE,
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    phone_number VARCHAR(255)
+);
+ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS guardian_name VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS guardian_contact VARCHAR(255);

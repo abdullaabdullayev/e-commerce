@@ -22,9 +22,11 @@ public class User {
     @Column(nullable = false, unique = true)
     private Long accountId;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String email;
     private String firstName;
     private String lastName;
     private String phoneNumber;
+    private String guardianName;
+    private String guardianContact;
 }

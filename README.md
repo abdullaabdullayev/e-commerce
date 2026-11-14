@@ -2,7 +2,9 @@
 
 > 🚧 **This project is under active development.** Features, APIs and structure may change at any time, and parts of it are incomplete or not yet production-ready.
 
-A microservices-based e-commerce backend built with Spring Boot and Spring Cloud.
+A microservices-based education and e-commerce backend built with Spring Boot and Spring Cloud.
+
+Courses: [Course service setup, roles and lesson APIs](course-service/README.md).
 
 Step-by-step learning: [Reliable registration with RabbitMQ and an outbox](docs/registration-flow.md).
 
@@ -23,6 +25,11 @@ inside `frontend` and open `http://localhost:3000`.
 | `auth-service`      | 8085 | Registration, login, JWT access and refresh tokens       |
 | `user-service`      | 8081 | User profiles (internal API called by `auth-service`)    |
 | `user-api`          | –    | Shared library: Feign client and DTOs for `user-service` |
+| `gateway-service`   | 8080 | Public API entry point                                 |
+| `product-service`   | 8083 | Product catalog, MongoDB                               |
+| `inventory-service` | 8084 | Stock and reservations                                 |
+| `order-service`     | 8086 | Orders and checkout                                    |
+| `course-service`    | 8087 | Admin syllabus, direct enrollment and student points   |
 
 ## Tech Stack
 
@@ -41,7 +48,8 @@ inside `frontend` and open `http://localhost:3000`.
 
 ### 1. Configure the environment
 
-Create `.env` using `.env.example`. Set the JWT secret and service keys, and keep
+Configure the root `.env`. See [course environment additions](course-service/.env.example)
+for the LMS keys. Set the JWT secret and service keys, and keep
 database/RabbitMQ credentials consistent with existing volumes. Compose runs the
 whole application in a private network; only Gateway's port 8080 is published.
 
@@ -79,8 +87,10 @@ See [gateway access](docs/gateway-access.md) for internal networking and configu
 - [x] User registration and login
 - [ ] Refresh token and logout endpoints
 - [ ] Input validation and proper error responses
-- [ ] API gateway
-- [ ] Product, cart and order services
+- [x] API gateway
+- [x] Product, inventory and order services
+- [x] Course, admin-managed syllabus, direct enrollment and student point APIs
+- [ ] Teacher and student frontend screens
 - [ ] Tests
 
 ## License

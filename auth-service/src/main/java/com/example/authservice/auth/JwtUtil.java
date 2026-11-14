@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import com.example.authservice.model.Account;
 
 @Component
 public class JwtUtil {
@@ -24,10 +25,12 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateAccessToken(String username) {
+    public String generateAccessToken(Account account) {
 
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(account.getEmail() != null ? account.getEmail() : account.getUsername())
+                .claim("accountId", account.getId())
+                .claim("roles", account.getRoles().stream().map(Enum::name).sorted().toList())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
@@ -46,7 +49,7 @@ public class JwtUtil {
 
     public boolean validateToken(String token, UserDetails userDetails) {
         String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return (userDetails.isEnabled() && username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
     private boolean isTokenExpired(String token) {

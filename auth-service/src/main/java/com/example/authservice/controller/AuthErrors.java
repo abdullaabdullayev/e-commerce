@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class AuthErrors {
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ProblemDetail duplicate() { return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,"Account identity already exists or conflicts with stored data"); }
+    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+    public ProblemDetail parameters() { return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,"Invalid request parameters"); }
     @ExceptionHandler(InternalAuthenticationServiceException.class)
     public ProblemDetail unavailable() {
         return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, "Authentication is temporarily unavailable");

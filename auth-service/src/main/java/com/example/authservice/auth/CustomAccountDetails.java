@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @RequiredArgsConstructor
 public class CustomAccountDetails implements UserDetails {
@@ -15,7 +16,7 @@ public class CustomAccountDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        return account.getRoles().stream().map(role -> (GrantedAuthority)new SimpleGrantedAuthority("ROLE_" + role.name())).toList();
     }
 
     @Override
@@ -25,6 +26,7 @@ public class CustomAccountDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return account.getEmail();
+        return account.getEmail() != null ? account.getEmail() : account.getUsername();
     }
+    @Override public boolean isEnabled() { return account.isActive(); }
 }
