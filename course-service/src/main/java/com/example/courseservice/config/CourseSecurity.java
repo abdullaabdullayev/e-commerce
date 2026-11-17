@@ -37,7 +37,9 @@ public class CourseSecurity {
         authorities.setAuthoritiesClaimName("roles"); authorities.setAuthorityPrefix("ROLE_");
         var converter = new JwtAuthenticationConverter(); converter.setJwtGrantedAuthoritiesConverter(authorities);
         return http.csrf(c -> c.disable()).sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(a -> a.requestMatchers(HttpMethod.GET, "/api/v1/courses", "/api/v1/courses/{id:[0-9a-fA-F-]{36}}").permitAll()
+                .authorizeHttpRequests(a -> a
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/courses", "/api/v1/courses/{id:[0-9a-fA-F-]{36}}").permitAll()
                         .requestMatchers("/error").permitAll().anyRequest().authenticated())
                 .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(converter))).build();
     }
