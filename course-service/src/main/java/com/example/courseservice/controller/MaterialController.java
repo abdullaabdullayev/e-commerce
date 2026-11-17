@@ -17,7 +17,7 @@ import java.util.UUID;
 import static com.example.courseservice.dto.MaterialDtos.*;
 
 @RestController
-@RequestMapping("/api/v1/course-materials")
+@RequestMapping({"/api/v1/course-materials", "/api/v1/admin/course-materials"})
 @Validated
 public class MaterialController {
     private final MaterialService materials;

@@ -11,7 +11,7 @@ import java.util.UUID;
 import static com.example.courseservice.dto.CourseDtos.*;
 
 @RestController
-@RequestMapping("/api/v1/courses/{courseId}")
+@RequestMapping({"/api/v1/courses/{courseId}", "/api/v1/admin/courses/{courseId}"})
 public class SyllabusController {
     private final SyllabusService syllabus;
 

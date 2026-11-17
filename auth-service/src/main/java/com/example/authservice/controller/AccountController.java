@@ -21,7 +21,6 @@ import java.util.*;
 
 @RestController
 @Validated
-@RequestMapping("/api/v1/auth")
 public class AccountController {
     private final AccountRepository accounts;
     private final JdbcTemplate jdbc;
@@ -42,14 +41,14 @@ public class AccountController {
     }
     private Account require(long id) { return accounts.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND)); }
     private AccountView view(Account a) { return new AccountView(a.getId(),a.getEmail(),a.getUsername(),a.isActive(),Set.copyOf(a.getRoles())); }
-    @GetMapping("/me") public AccountView me(Authentication auth) { return view(accounts.findByIdentifier(auth.getName()).orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED))); }
-    @GetMapping("/accounts/{id}") public AccountView get(@PathVariable @Positive long id) { return view(require(id)); }
-    @GetMapping("/accounts") public List<AccountView> list(@RequestParam(required=false) Role role,@RequestParam(defaultValue="0") @Min(0) @Max(100000) int page) {
+    @GetMapping("/api/v1/auth/me") public AccountView me(Authentication auth) { return view(accounts.findByIdentifier(auth.getName()).orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED))); }
+    @GetMapping({"/api/v1/auth/accounts/{id}", "/api/v1/admin/accounts/{id}"}) public AccountView get(@PathVariable @Positive long id) { return view(require(id)); }
+    @GetMapping({"/api/v1/auth/accounts", "/api/v1/admin/accounts"}) public List<AccountView> list(@RequestParam(required=false) Role role,@RequestParam(defaultValue="0") @Min(0) @Max(100000) int page) {
         List<Long> ids=role==null ? jdbc.queryForList("SELECT id FROM accounts ORDER BY id LIMIT 50 OFFSET ?",Long.class,page*50)
                 : jdbc.queryForList("SELECT account_id FROM account_roles WHERE role=? ORDER BY account_id LIMIT 50 OFFSET ?",Long.class,role.name(),page*50);
         return accounts.findAllById(ids).stream().sorted(Comparator.comparing(Account::getId)).map(this::view).toList();
     }
-    @PostMapping("/accounts") @ResponseStatus(HttpStatus.CREATED) @Transactional
+    @PostMapping({"/api/v1/auth/accounts", "/api/v1/admin/accounts"}) @ResponseStatus(HttpStatus.CREATED) @Transactional
     public AccountView create(@Valid @RequestBody CreateAccount r) {
         String email=r.email()==null || r.email().isBlank() ? null : r.email().trim();
         if(email!=null && accounts.existsByEmail(email) || r.username()!=null && accounts.existsByUsername(r.username())) throw new ResponseStatusException(HttpStatus.CONFLICT,"Email or username already exists");
@@ -59,14 +58,14 @@ public class AccountController {
         return view(account);
     }
     private void roleLock() { jdbc.execute("SELECT pg_advisory_xact_lock(82350001)"); }
-    @PutMapping("/accounts/{id}/roles") @Transactional
+    @PutMapping({"/api/v1/auth/accounts/{id}/roles", "/api/v1/admin/accounts/{id}/roles"}) @Transactional
     public AccountView roles(@PathVariable @Positive long id,@Valid @RequestBody RolesInput r) {
         roleLock(); Account account=require(id);
         if(account.getRoles().contains(Role.ADMIN) && !r.roles().contains(Role.ADMIN)
                 && jdbc.queryForObject("SELECT count(*) FROM account_roles WHERE role='ADMIN'",Integer.class)<=1) throw new ResponseStatusException(HttpStatus.CONFLICT,"The last administrator cannot be removed");
         account.setRoles(new HashSet<>(r.roles())); return view(accounts.save(account));
     }
-    @PostMapping("/bootstrap-admin") @Transactional
+    @PostMapping("/api/v1/auth/bootstrap-admin") @Transactional
     public AccountView bootstrap(@RequestHeader(value="X-Admin-Bootstrap-Key",required=false) String supplied,@Valid @RequestBody BootstrapInput r) {
         if(bootstrapKey.length()<32) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Administrator bootstrap is disabled");
         if(supplied==null || !MessageDigest.isEqual(bootstrapKey.getBytes(StandardCharsets.UTF_8),supplied.getBytes(StandardCharsets.UTF_8))) throw new ResponseStatusException(HttpStatus.FORBIDDEN);

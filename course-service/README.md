@@ -72,6 +72,26 @@ IDE: JDK 21, Gradle reload, CourseServiceApplication. Course DB localhost:5436,
 S3 localhost:9000. Tətbiqləri IDE və Docker-dən paralel eyni Eureka qeydiyyatına
 qoşma. .env kök və ya modul qovluğundan avtomatik oxunur.
 
+## Admin panelin API-si
+
+Gateway-də baza yolu `/api/v1/admin`-dir. Bütün sorğular `Authorization: Bearer <accessToken>` başlığı və ADMIN rolu tələb edir. Panel siyahıda qaralama, yayımlanmış və arxivlənmiş kursları görür.
+
+| Əməliyyat | Metod və baza yolundan sonrakı ünvan |
+|---|---|
+| Hesabları siyahıla və ya yarat | `GET /accounts?role=TEACHER&page=0`, `POST /accounts` |
+| Hesabı oxu və ya rollarını dəyiş | `GET /accounts/{id}`, `PUT /accounts/{id}/roles` |
+| Kursları siyahıla və ya yarat | `GET /courses?page=0&size=20`, `POST /courses` |
+| Kursu redaktə et və ya statusunu dəyiş | `PUT /courses/{id}`, `PUT /courses/{id}/status` |
+| Müəllim təyin et və ya təyinatı sil | `PUT` və `DELETE /courses/{id}/teachers/{accountId}` |
+| Tələbələri siyahıla, kursa yaz və ya qeydiyyat statusunu dəyiş | `GET /courses/{id}/students`, `PUT /courses/{id}/students/{accountId}` |
+| Sillabusu oxu və dərs yarat | `GET /courses/{id}/syllabus`, `POST /courses/{id}/lessons` |
+| Dərsi redaktə et və ya arxivlə | `PUT` və `DELETE /courses/{id}/lessons/{lessonId}` |
+| Dərslərin sırasını dəyiş | `PUT /courses/{id}/lesson-order` |
+| Fayl və ya keçid əlavə et | `POST /course-materials/lessons/{lessonId}/files`, `POST /course-materials/lessons/{lessonId}/links` |
+| Materialı oxu, arxivlə və ya faylı endir | `GET` və `DELETE /course-materials/{id}`, `GET /course-materials/{id}/download` |
+| Xal tarixçəsinə bax və ya xal ver | `GET` və `POST /courses/{id}/students/{studentId}/points` |
+| Verilmiş xalı düzəlt | `POST /courses/{id}/students/{studentId}/points/{awardId}/corrections` |
+
 ## Admin və hesablar
 
 1. Sahib hesabını POST /api/v1/auth/register ilə yarat və login et.
