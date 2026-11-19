@@ -92,6 +92,7 @@ services:
     environment:
       <<: [*app-env, *db-env, *rabbit-env]
       EUREKA_INSTANCE_HOSTNAME: user-service
+      AUTH_SERVICE_URL: http://auth-service:8085
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/user_db
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
       PROFILE_SERVICE_KEY: ${PROFILE_SERVICE_KEY:?Set PROFILE_SERVICE_KEY in .env}

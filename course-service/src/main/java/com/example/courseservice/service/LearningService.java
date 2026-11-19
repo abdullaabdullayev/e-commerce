@@ -26,7 +26,11 @@ public class LearningService {
 
     public PageResponse<LearningResponse> mine(Actor actor, int page, int size) {
         if (!actor.student()) throw forbidden();
-        var slice = enrollments.findLearning(actor.id(), PageRequest.of(page, size));
+        return forStudent(actor.id(), page, size);
+    }
+
+    public PageResponse<LearningResponse> forStudent(long studentId, int page, int size) {
+        var slice = enrollments.findLearning(studentId, PageRequest.of(page, size));
         if (slice.isEmpty()) return PageResponse.from(slice.map(e -> new LearningResponse(
                 CourseMapper.course(e.getCourse()), e.getStatus(), List.of(), 0)));
         var ids = slice.getContent().stream().map(e -> e.getId()).toList();

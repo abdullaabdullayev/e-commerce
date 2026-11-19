@@ -38,6 +38,7 @@ public class ProfileSecurity {
         var converter = new JwtAuthenticationConverter(); converter.setJwtGrantedAuthoritiesConverter(authorities);
         return http.csrf(c -> c.disable()).sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a.requestMatchers("/internal/v1/users/lookup", "/error").permitAll()
+                        .requestMatchers("/api/v1/parent/**", "/internal/v1/parent/**").hasRole("PARENT")
                         .requestMatchers("/api/v1/users/me").authenticated().anyRequest().hasRole("ADMIN"))
                 .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(converter))).build();
     }

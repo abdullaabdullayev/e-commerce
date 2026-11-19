@@ -1,2 +1,2 @@
 package com.example.authservice.model;
-public enum Role { CUSTOMER, ADMIN, TEACHER, STUDENT }
+public enum Role { CUSTOMER, ADMIN, TEACHER, STUDENT, PARENT }
