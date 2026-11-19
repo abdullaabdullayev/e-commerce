@@ -7,6 +7,7 @@ import com.example.authservice.dto.RegisterRequest;
 import com.example.authservice.dto.RegisterResponse;
 import com.example.authservice.messaging.UserEventPublisher;
 import com.example.authservice.model.Account;
+import com.example.authservice.model.Role;
 import com.example.authservice.model.RefreshToken;
 import com.example.authservice.repository.AccountRepository;
 import com.example.user.api.event.UserRegisteredEvent;
@@ -18,6 +19,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +35,15 @@ public class AuthService {
 
     @Transactional
     public RegisterResponse register(RegisterRequest request){
+        return createAccount(request, Role.CUSTOMER);
+    }
 
+    @Transactional
+    public RegisterResponse registerInvitedParent(RegisterRequest request) {
+        return createAccount(request, Role.PARENT);
+    }
+
+    private RegisterResponse createAccount(RegisterRequest request, Role role) {
         String email = request.getEmail();
 
         if(accountRepository.existsByEmail(email)){
@@ -40,6 +51,7 @@ public class AuthService {
         }
 
         Account account = new Account();
+        account.setRoles(new HashSet<>(Set.of(role)));
         account.setEmail(request.getEmail());
         account.setPasswordHash(passwordEncoder.encode(request.getPassword()));
 

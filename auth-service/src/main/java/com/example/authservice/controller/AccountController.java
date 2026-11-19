@@ -9,6 +9,7 @@ import jakarta.validation.constraints.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,8 +45,8 @@ public class AccountController {
     @GetMapping("/api/v1/auth/me") public AccountView me(Authentication auth) { return view(accounts.findByIdentifier(auth.getName()).orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED))); }
     @GetMapping({"/api/v1/auth/accounts/{id}", "/api/v1/admin/accounts/{id}"}) public AccountView get(@PathVariable @Positive long id) { return view(require(id)); }
     @GetMapping({"/api/v1/auth/accounts", "/api/v1/admin/accounts"}) public List<AccountView> list(@RequestParam(required=false) Role role,@RequestParam(defaultValue="0") @Min(0) @Max(100000) int page) {
-        List<Long> ids=role==null ? jdbc.queryForList("SELECT id FROM accounts ORDER BY id LIMIT 50 OFFSET ?",Long.class,page*50)
-                : jdbc.queryForList("SELECT account_id FROM account_roles WHERE role=? ORDER BY account_id LIMIT 50 OFFSET ?",Long.class,role.name(),page*50);
+        var pageable = PageRequest.of(page, 50);
+        List<Long> ids = role == null ? accounts.listIds(pageable) : accounts.listIdsWithRole(role, pageable);
         return accounts.findAllById(ids).stream().sorted(Comparator.comparing(Account::getId)).map(this::view).toList();
     }
     @PostMapping({"/api/v1/auth/accounts", "/api/v1/admin/accounts"}) @ResponseStatus(HttpStatus.CREATED) @Transactional

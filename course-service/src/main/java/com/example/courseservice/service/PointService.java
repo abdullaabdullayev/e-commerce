@@ -64,8 +64,19 @@ public class PointService {
         if (ownStudentHistory && !actor.admin() && enrollment.getCourse().getStatus() == CourseStatus.DRAFT) {
             throw forbidden();
         }
+        return history(enrollment, page, size);
+    }
+
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public PointHistory familyHistory(UUID courseId, long studentId, int page, int size) {
+        Enrollment enrollment = requireEnrollment(courseId, studentId);
+        if (enrollment.getCourse().getStatus() == CourseStatus.DRAFT) throw notFound("Course");
+        return history(enrollment, page, size);
+    }
+
+    private PointHistory history(Enrollment enrollment, int page, int size) {
         var entries = points.findByEnrollmentIdOrderByCreatedAtDescIdAsc(enrollment.getId(), PageRequest.of(page, size));
-        return new PointHistory(courseId, studentId, points.total(enrollment.getId()),
+        return new PointHistory(enrollment.getCourse().getId(), enrollment.getStudentAccountId(), points.total(enrollment.getId()),
                 PageResponse.from(entries.map(CourseMapper::point)));
     }
 

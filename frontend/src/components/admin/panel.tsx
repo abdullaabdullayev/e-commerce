@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Action, api, Field, labels, Notes, Pager, Pending, str, useData, type Account, type Course, type Page, type Syllabus } from "./shared";
 import { Lessons } from "./syllabus";
 import { People } from "./people";
+import { FamilyLinks, ParentInvitation } from "./family-links";
 
 function CourseForm({course,done}:{course?:Course;done:()=>void}) {
   return <Action button={course?"Dəyişikliyi saxla":"Kurs yarat"} done={done} reset={!course} submit={f=>{
@@ -22,14 +23,17 @@ function CourseForm({course,done}:{course?:Course;done:()=>void}) {
 
 function Accounts({rev,done}:{rev:number;done:()=>void}) {
   const [page,setPage]=useState(0);
+  const [parentId,setParentId]=useState<number>();
   const {data,error}=useData<Account[]>("accounts?page="+page,rev);
   return <section><h2>Hesablar</h2><details className="ap-editor"><summary>+ Hesab yarat</summary>
     <Action reset button="Hesab yarat" done={done} submit={f=>api("accounts","POST",{email:str(f,"email"),password:String(f.get("password")),firstName:str(f,"firstName"),lastName:str(f,"lastName"),roles:[str(f,"role")]})}>
       <div className="ap-pair"><Field name="firstName" label="Ad" limit={80}/><Field name="lastName" label="Soyad" limit={80}/></div>
       <Field name="email" label="Email" type="email" limit={254}/><label>İlkin şifrə<input name="password" type="password" required minLength={8} maxLength={72} autoComplete="new-password"/></label>
       <label>Rol<select name="role"><option value="TEACHER">Müəllim</option><option value="STUDENT">Tələbə</option></select></label>
-    </Action></details>
-    {data ? <>{data.map(a=><div className="ap-row" key={a.accountId}><strong>{a.email||a.username}</strong><span>{a.roles.map(r=>labels[r]||r).join(", ")}</span></div>)}{!data.length&&<p>Hesab tapılmadı.</p>}<Pager page={page} next={data.length===50} set={setPage}/></>:<Pending error={error}/>}
+    </Action></details><ParentInvitation/>
+    {data ? <>{data.map(a=><div key={a.accountId}><div className="ap-row"><strong>{a.email||a.username}</strong><span>{a.roles.map(r=>labels[r]||r).join(", ")}</span>
+      {a.roles.includes("PARENT") && <button aria-expanded={parentId===a.accountId} onClick={()=>setParentId(parentId===a.accountId?undefined:a.accountId)}>Uşaqları</button>}</div>
+      {parentId===a.accountId && <FamilyLinks parentId={parentId} rev={rev} done={done}/>}</div>)}{!data.length&&<p>Hesab tapılmadı.</p>}<Pager page={page} next={data.length===50} set={setPage}/></>:<Pending error={error}/>}
   </section>;
 }
 function CourseDesk({id,rev,done}:{id:string;rev:number;done:()=>void}) {

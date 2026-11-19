@@ -12,12 +12,12 @@ spring:
             - id: auth-service
               uri: lb://AUTH-SERVICE
               predicates:
-                - Path=/api/v1/auth/**,/api/v1/admin/accounts/**
+                - Path=/api/v1/auth/**,/api/v1/admin/accounts/**,/api/v1/admin/parent-invitations
 
             - id: user-service
               uri: lb://USER-SERVICE
               predicates:
-                - Path=/api/v1/users/**
+                - Path=/api/v1/users/**,/api/v1/admin/parents/**,/api/v1/parent/children
 
             - id: product-service
               uri: lb://PRODUCT-SERVICE
@@ -37,7 +37,7 @@ spring:
             - id: course-service
               uri: lb://COURSE-SERVICE
               predicates:
-                - Path=/api/v1/courses/**,/api/v1/course-materials/**,/api/v1/admin/courses/**,/api/v1/admin/course-materials/**
+                - Path=/api/v1/courses/**,/api/v1/course-materials/**,/api/v1/admin/courses/**,/api/v1/admin/course-materials/**,/api/v1/parent/children/*/**
 
 eureka:
   instance:

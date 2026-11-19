@@ -1,6 +1,8 @@
 package com.example.courseservice.integration;
 
 import com.example.courseservice.dto.PageResponse;
+import com.example.courseservice.exception.DomainException;
+import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -19,6 +21,17 @@ public class ProfileClient {
         factory.setReadTimeout(5000);
         client = RestClient.builder().baseUrl(baseUrl).requestFactory(factory).build();
         this.serviceKey = serviceKey;
+    }
+
+    public void requireParentLink(String token, long studentId) {
+        try {
+            client.get().uri("/internal/v1/parent/children/{id}", studentId)
+                    .headers(headers -> headers.setBearerAuth(token)).retrieve().toBodilessEntity();
+        } catch (HttpClientErrorException.Forbidden | HttpClientErrorException.Unauthorized denied) {
+            throw DomainException.forbidden();
+        } catch (RestClientException unavailable) {
+            throw new DomainException(HttpStatus.SERVICE_UNAVAILABLE, "Family service unavailable");
+        }
     }
 
     public RosterResponse enrich(PageResponse<EnrollmentResponse> page) {

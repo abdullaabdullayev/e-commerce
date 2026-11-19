@@ -9,7 +9,7 @@ Java 21, Spring Boot, Spring Data JPA, PostgreSQL/Flyway və məxfi S3 saxlancı
 | ADMIN | Müəllim/tələbə hesabı yaratmaq, kurs yaratmaq, müəllim təyin etmək, tələbə əlavə etmək, sillabus və materialları idarə etmək, xal vermək və düzəltmək |
 | TEACHER | Yalnız təyin olunduğu kursların sillabusunu/materiallarını və tələbə siyahısını görmək, həmin kurslarda aktiv tələbələrə xal vermək |
 | STUDENT | Öz kurslarını, ümumi xalını və xal tarixçəsini görmək |
-| Valideyn | Tələbənin qeydiyyat emaili və şifrəsi ilə STUDENT ekranından istifadə etmək; ayrıca PARENT rolu yoxdur |
+| PARENT | Öz hesabı ilə daxil olub adminin bağladığı uşaqların kurslarını, xallarını və yayımlanmış dərs hesabatlarını görmək |
 
 Sillabus və materiallar tələbə/valideyn üçün bağlıdır. Kursun yayımlanması bunu
 dəyişmir. Müəllim sillabus, dərs və material əlavə edə, redaktə edə və silə bilməz.
@@ -113,7 +113,7 @@ Admin POST /api/v1/auth/accounts ilə hesab açır:
 }
 ```
 
-Tələbə üçün STUDENT rolu verilir. Valideyn həmin tələbənin emaili ilə daxil olur.
+Tələbə STUDENT rolu ilə daxil olur. Valideyn ayrıca PARENT hesabından istifadə edir.
 Login: POST /api/v1/auth/login, {"email":"...","password":"..."}.
 Açıq qeydiyyat yalnız CUSTOMER rolunu verir; istifadəçi özünə müəllim/admin seçmir.
 Mövcud hesab rolları PUT /api/v1/auth/accounts/{id}/roles ilə əvəz edilir.
@@ -223,5 +223,25 @@ Müəllim təyinatları qorunur, əvvəlki EDIT dəyəri artıq redaktə icazəs
 Bütün materiallar staff-only olur; köhnə STUDENT_VISIBLE dəyərləri çevrilir.
 Köhnə /course-groups, /groups, /release və /visibility yolları çıxarılıb.
 
-Frontend müəllim/tələbə ekranları, ayrıca valideyn hesabı, imtahan, sertifikat,
-davamiyyət və kurs ödənişi bu backend mərhələsinə daxil deyil.
+## Valideyn kabineti və dərs hesabatları
+
+Admin `/admin` səhifəsinin **Hesablar** bölməsində valideynin e-poçtuna aid dəvət yaradır və keçidi həmin valideynlə paylaşır. Valideyn 48 saat ərzində keçidi açıb adını və şifrəsini təyin edir. Auth bazasında keçidin yalnız SHA-256 heşi saxlanılır. Admin hesab siyahısını yeniləyib valideynin **Uşaqları** bölməsindən tələbəni seçir. Bir uşağa bir neçə valideyn, bir valideynə bir neçə uşaq bağlamaq mümkündür.
+
+Müəllim `/muellim` səhifəsində kursu, sillabus mövzusunu və faktiki dərs vaxtını seçir. O, hər tələbə üçün ayrıca qaralama saxlayır. İştirak edən tələbə üçün öyrəndikləri və dərsdə iştirakı doldurulandan sonra müəllim hesabatı yayımlaya bilər. Valideyn `/valideyn` səhifəsində yayımlanmış hesabatı, uşağın kurslarını və xal tarixçəsini görür. Hazırkı versiyada çatdırılma kabinet vasitəsilədir. Avtomatik e-poçt göndərişi növbəti mərhələdir.
+
+| Metod | Gateway yolu | Məqsəd |
+|---|---|---|
+| POST | `/api/v1/admin/parent-invitations` | Valideynin e-poçtuna aid birdəfəlik dəvət yaratmaq |
+| POST | `/api/v1/auth/parent-invitations/accept` | Dəvətlə qeydiyyatı tamamlamaq |
+| GET | `/api/v1/admin/parents/{parentId}/children` | Əlaqələri görmək |
+| PUT, DELETE | `/api/v1/admin/parents/{parentId}/children/{studentId}` | Əlaqəni yaratmaq və ya ləğv etmək |
+| GET | `/api/v1/parent/children` | Öz uşaqlarını görmək |
+| GET | `/api/v1/parent/children/{studentId}/courses` | Uşağın kurslarını və kurs başına xal cəmini görmək |
+| GET | `/api/v1/parent/children/{studentId}/courses/{courseId}/points` | Xal tarixçəsini oxumaq |
+| GET | `/api/v1/parent/children/{studentId}/reports` | Yayımlanmış hesabatları oxumaq |
+| GET, POST | `/api/v1/courses/{courseId}/sessions` | Keçirilmiş dərsləri görmək və dərsi qeyd etmək |
+| GET | `/api/v1/courses/{courseId}/sessions/{sessionId}/reports` | Sessiyanın hesabatlarını görmək |
+| GET, PUT | `/api/v1/courses/{courseId}/sessions/{sessionId}/reports/{studentId}` | Tələbənin hesabatını oxumaq və ya qaralamanı saxlamaq |
+| POST | `/api/v1/courses/{courseId}/sessions/{sessionId}/reports/publish` | Seçilmiş tələbələrin saxlanmış hesabatlarını yayımlamaq |
+
+Course valideynin hər oxu sorğusunda JWT-ni User servisinə ötürərək ailə əlaqəsini yoxlayır. User əlçatmaz olduqda oxu sorğusu `503` qaytarır. Əlaqə ləğv edildikdə növbəti oxu sorğusu `403` qaytarır.

@@ -9,9 +9,16 @@ export async function POST(request: NextRequest, context: { params: Promise<{ ac
   const { action } = await context.params;
   const jar = await cookies();
   if (action === "logout") { jar.delete("kodariun_access"); return NextResponse.json({ ok: true }); }
-  if (!["login", "register"].includes(action)) return NextResponse.json({ detail: "Endpoint mövcud deyil." }, { status: 404 });
+  if (!["login", "register", "accept-invitation"].includes(action)) return NextResponse.json({ detail: "Endpoint mövcud deyil." }, { status: 404 });
   try {
-    const response = await fetch(`${gateway()}/api/v1/auth/${action}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: await request.text(), cache: "no-store", signal: AbortSignal.timeout(10000) });
+    const path = action === "accept-invitation" ? "parent-invitations/accept" : action;
+    const response = await fetch(`${gateway()}/api/v1/auth/${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: await request.text(), cache: "no-store", signal: AbortSignal.timeout(10000) });
+    if (action === "accept-invitation") {
+      if (response.ok) return new NextResponse(null, { status: 204 });
+      const detail = response.status === 410 ? "Dəvətin müddəti bitib və ya artıq istifadə edilib." :
+        response.status === 409 ? "Bu e-poçt üçün artıq hesab var." : "Dəvət qəbul edilmədi. Məlumatları yoxlayın.";
+      return NextResponse.json({ detail }, { status: response.status });
+    }
     if (!response.ok) return NextResponse.json({ detail: backendError(response.status, undefined, action as "login" | "register") }, { status: response.status });
     const data = await response.json();
     if (action === "login") {

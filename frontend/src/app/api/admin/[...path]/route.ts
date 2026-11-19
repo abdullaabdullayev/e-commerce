@@ -6,11 +6,13 @@ import { isSameOrigin } from "@/lib/request-origin";
 const id = "[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}";
 const course = `courses/${id}`;
 const student = `${course}/students/[1-9][0-9]*`;
+const children = "parents/[1-9][0-9]*/children";
+const child = `${children}/[1-9][0-9]*`;
 const routes: Record<string, RegExp> = Object.fromEntries(Object.entries({
-  GET: ["accounts", "accounts/[1-9][0-9]*", "courses", `${course}/syllabus`, `${course}/students`, `${student}/points`, `course-materials/${id}/download`],
-  POST: ["accounts", "courses", `${course}/lessons`, `${student}/points`, `${student}/points/${id}/corrections`, `course-materials/lessons/${id}/(?:files|links)`],
-  PUT: [course, `${course}/(?:status|lesson-order)`, `${course}/lessons/${id}`, `${course}/teachers/[1-9][0-9]*`, student],
-  DELETE: [`${course}/teachers/[1-9][0-9]*`, `${course}/lessons/${id}`, `course-materials/${id}`],
+  GET: [children, "accounts", "accounts/[1-9][0-9]*", "courses", `${course}/syllabus`, `${course}/students`, `${student}/points`, `course-materials/${id}/download`],
+  POST: ["parent-invitations", "accounts", "courses", `${course}/lessons`, `${student}/points`, `${student}/points/${id}/corrections`, `course-materials/lessons/${id}/(?:files|links)`],
+  PUT: [child, course, `${course}/(?:status|lesson-order)`, `${course}/lessons/${id}`, `${course}/teachers/[1-9][0-9]*`, student],
+  DELETE: [child, `${course}/teachers/[1-9][0-9]*`, `${course}/lessons/${id}`, `course-materials/${id}`],
 }).map(([method, paths]) => [method, new RegExp(`^(?:${paths.join("|")})$`)]));
 function error(status: number, detail: string) {
   return NextResponse.json({ detail }, { status, headers: { "Cache-Control": "no-store" } });
