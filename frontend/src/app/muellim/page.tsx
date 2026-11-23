@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { accountSession } from "@/lib/admin-session";
 import { learningRequest, lessonDate, pageNumber, uuid, type LessonReport, type Slice } from "@/lib/learning";
+import { CabinetHeading } from "@/components/learning-journal";
 import { NewSession, ReportEditor } from "./forms";
 
 export const metadata = { title: "Dərs hesabatları", robots: { index: false } };
@@ -18,7 +19,7 @@ function Pages({base, page, next}: {base: string; page: number; next: boolean}) 
 export default async function TeacherPage({searchParams}: {searchParams: Promise<Query>}) {
   const account = await accountSession();
   if (account.status === 401) redirect("/hesab?next=/muellim");
-  if (account.status !== 200 || !account.roles.includes("TEACHER")) return <main className="shell section"><p>{account.status === 503 ? "Hesab xidməti əlçatan deyil." : "Müəllim hesabı ilə daxil olun."}</p></main>;
+  if (account.status !== 200 || !account.roles.some(role => role === "TEACHER" || role === "ADMIN")) return <div className="shell journal"><p>{account.status === 503 ? "Hesab xidməti əlçatan deyil." : "Müəllim hesabı ilə daxil olun."}</p></div>;
   const query = await searchParams, page = pageNumber(query.page);
   const read = <T,>(path: string) => learningRequest<T>(account.token, path);
   let content;
@@ -49,5 +50,5 @@ export default async function TeacherPage({searchParams}: {searchParams: Promise
       }
     }
   }
-  return <main className="shell section"><Link href="/hesab">← Hesabım</Link><h1>Dərs hesabatları</h1>{content}</main>;
+  return <div className="shell journal"><CabinetHeading title="Dərs hesabatları"/><div className="journal-body teacher-desk">{query.course && <Link className="journal-back" href="/muellim">Kurs siyahısına qayıt</Link>}{content}</div></div>;
 }

@@ -23,8 +23,8 @@ inside `frontend` and open `http://localhost:3000`.
 |---------------------|------|----------------------------------------------------------|
 | `discovery-service` | 8761 | Eureka service registry                                  |
 | `auth-service`      | 8085 | Registration, login, JWT access and refresh tokens       |
-| `user-service`      | 8081 | User profiles (internal API called by `auth-service`)    |
-| `user-api`          | –    | Shared library: Feign client and DTOs for `user-service` |
+| `user-service`      | 8081 | User profiles and parent–student relationships            |
+| `user-api`          | –    | Shared registration event contract                       |
 | `gateway-service`   | 8080 | Public API entry point                                 |
 | `product-service`   | 8083 | Product catalog, MongoDB                               |
 | `inventory-service` | 8084 | Stock and reservations                                 |
@@ -38,6 +38,21 @@ inside `frontend` and open `http://localhost:3000`.
 - Spring Security with JWT
 - Spring Data JPA, PostgreSQL
 - Gradle (multi-module)
+
+## Data ownership
+
+| Service | Database | Persistent data |
+|---|---|---|
+| Auth | PostgreSQL `auth_db` | Accounts, roles, invitations, refresh tokens and the registration outbox |
+| User | PostgreSQL `user_db` | Profiles and family links |
+| Course | PostgreSQL `course_db` | Courses, enrollments, syllabus, reports and points |
+| Inventory | PostgreSQL `inventory_db` | Stock, receipts and reservations |
+| Order | PostgreSQL `order_db` | Customer orders, item price snapshots and payment references |
+| Product | MongoDB `product_db` | Products and categories |
+
+Each PostgreSQL service owns its Flyway migrations and accesses its tables through Spring Data JPA repositories. Controllers validate HTTP input and delegate to services. Order calls Catalog and Inventory outside database transactions. Gateway and Discovery run without application databases.
+
+For independent PostgreSQL logins, set `<SERVICE>_DB_USERNAME` and `<SERVICE>_DB_PASSWORD` for `AUTH`, `USER`, `COURSE`, `INVENTORY` or `ORDER`. Each pair defaults to the existing `DB_USERNAME` and `DB_PASSWORD`. For an initialized volume, provision the matching PostgreSQL role and grants before changing the application's credentials.
 
 ## Getting Started
 

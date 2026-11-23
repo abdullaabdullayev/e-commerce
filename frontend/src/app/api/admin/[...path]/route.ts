@@ -11,7 +11,7 @@ const child = `${children}/[1-9][0-9]*`;
 const routes: Record<string, RegExp> = Object.fromEntries(Object.entries({
   GET: [children, "accounts", "accounts/[1-9][0-9]*", "courses", `${course}/syllabus`, `${course}/students`, `${student}/points`, `course-materials/${id}/download`],
   POST: ["parent-invitations", "accounts", "courses", `${course}/lessons`, `${student}/points`, `${student}/points/${id}/corrections`, `course-materials/lessons/${id}/(?:files|links)`],
-  PUT: [child, course, `${course}/(?:status|lesson-order)`, `${course}/lessons/${id}`, `${course}/teachers/[1-9][0-9]*`, student],
+  PUT: ["accounts/[1-9][0-9]*/roles", child, course, `${course}/(?:status|lesson-order)`, `${course}/lessons/${id}`, `${course}/teachers/[1-9][0-9]*`, student],
   DELETE: [child, `${course}/teachers/[1-9][0-9]*`, `${course}/lessons/${id}`, `course-materials/${id}`],
 }).map(([method, paths]) => [method, new RegExp(`^(?:${paths.join("|")})$`)]));
 function error(status: number, detail: string) {

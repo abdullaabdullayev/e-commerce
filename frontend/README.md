@@ -21,12 +21,16 @@ Paketlər artıq yüklənibsə yalnız `npm run dev` kifayətdir. Ünvan:
 | Yol | Məzmun |
 |---|---|
 | `/` | Ana səhifə |
-| `/kurslar` | LEGO, STEAM və Arduino istiqamətləri |
+| `/kurslar` | Yayımlanmış kurslar, yaş hədləri, səviyyələr və tədris istiqamətləri |
 | `/magaza` | Axtarış, kateqoriya filtri və məhsullar |
 | `/magaza/[id]` | Məhsul detalı |
 | `/haqqimizda` | Kodariun haqqında |
 | `/elaqe` | Əlaqə və istifadəçinin Instagram-da paylaşacağı müraciət mətni |
-| `/hesab` | Login, qeydiyyat və şəxsi sifarişlər |
+| `/hesab` | Giriş, qeydiyyat, rola uyğun kabinetlər və şəxsi sifarişlər |
+| `/telebe` | Tələbənin kursları, qeydiyyat vəziyyəti və xal tarixçəsi |
+| `/valideyn` | Uşaq seçimi, yayımlanmış dərs hesabatları, kurslar və xallar |
+| `/muellim` | Müəllimin kursları, dərs qeydləri və valideyn üçün hesabatlar |
+| `/admin` | Kurslar, hesablar, rollar, valideyn dəvətləri və ailə əlaqələri |
 | `/sifaris` | Səbət, məlumat sorğusu və canlı rejimdə müvəqqəti rezervasiya |
 
 ## Kataloq rejimləri
@@ -61,8 +65,7 @@ Token bitəndə yenidən login lazımdır; backend refresh endpoint-i hələ int
 Production HTTPS reverse proxy arxasında `COOKIE_SECURE=true` təyin et.
 
 Frontend `/api/backend/` proxy-si yalnız kataloq, stok və şəxsi sifariş yollarına
-icazə verir. `/internal/` və admin açarları brauzerə ötürülmür. İdarəetmə paneli bu
-frontend mərhələsinə daxil deyil. Məhsul detalında stok hər 15 saniyədən bir,
+icazə verir. `/internal/` və admin açarları brauzerə ötürülmür. İdarəetmə əməliyyatları `/api/admin/` vasitəsilə admin sessiyası ilə yerinə yetirilir. Məhsul detalında stok hər 15 saniyədən bir,
 açıq sifarişlər isə hesab səhifəsində hər 10 saniyədən bir yenilənir.
 Sifarişlər backend-in 20 elementlik səhifələrinə uyğun göstərilir.
 Nümunə və canlı kataloqun səbətləri ayrıca saxlanır.
@@ -106,6 +109,4 @@ məhsul düzgün olaraq “Yarış maşını” adı ilə göstərilir.
 
 ## Yoxlama
 
-`pnpm typecheck` yalnız TypeScript yoxlaması edir. Bu mərhələdə backend-in
-avtomatik testləri işlədilməyib. Mövcud dev prosesində əsas səhifələrin HTTP
-cavabları və desktop/mobil görünüşü yoxlanılıb; production build ayrıca mərhələdir.
+`pnpm typecheck` TypeScript yoxlamasını, `pnpm build` isə production yığımını işə salır. Kabinetləri real məlumatlarla yoxlamaq üçün Gateway və uyğun servislər işləməli, hesabda müvafiq rol olmalıdır.

@@ -10,7 +10,7 @@ const orderDetails: Record<string, string> = {
 export function backendError(status: number, detail?: string, action?: "login" | "register") {
   if (status >= 500) return "Xidmət hazırda əlçatan deyil. Bir az sonra yenidən cəhd et.";
   if (status === 429) return "Çox sayda sorğu göndərilib. Bir az gözləyib yenidən cəhd et.";
-  if (action === "login" && (status === 401 || status === 403)) return "Email və ya şifrə düzgün deyil.";
+  if (action === "login" && (status === 401 || status === 403)) return "Giriş məlumatları düzgün deyil. E-poçtu və ya istifadəçi adını və şifrəni yoxla.";
   if (action === "register" && status === 409) return "Bu email ilə hesab artıq mövcuddur. Hesabına daxil ol.";
   if (status === 401) return "Sessiyanın vaxtı bitib. Hesabına yenidən daxil ol.";
   if (detail && orderDetails[detail]) return orderDetails[detail];

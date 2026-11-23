@@ -2,6 +2,7 @@ package com.example.courseservice.controller;
 
 import com.example.courseservice.security.Actor;
 import com.example.courseservice.dto.PageResponse;
+import com.example.courseservice.domain.CourseStatus;
 import com.example.courseservice.service.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -38,7 +39,16 @@ public class CourseController {
         return courses.published(id);
     }
 
-    @GetMapping({"/api/v1/courses/mine", "/api/v1/admin/courses"})
+    @GetMapping("/api/v1/admin/courses")
+    public PageResponse<CourseResponse> adminList(@AuthenticationPrincipal Jwt jwt,
+            @RequestParam(defaultValue = "") @Size(max = 160) String q,
+            @RequestParam(required = false) CourseStatus status,
+            @RequestParam(defaultValue = "0") @Min(0) @Max(100000) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+        return courses.adminList(Actor.from(jwt), q, status, page, size);
+    }
+
+    @GetMapping("/api/v1/courses/mine")
     public PageResponse<CourseResponse> managed(@AuthenticationPrincipal Jwt jwt,
             @RequestParam(defaultValue = "0") @Min(0) @Max(100000) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {

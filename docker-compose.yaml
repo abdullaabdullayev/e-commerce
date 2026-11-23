@@ -9,12 +9,6 @@ x-app-env: &app-env
   EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
   EUREKA_INSTANCE_PREFERIPADDRESS: "false"
 
-x-db-env: &db-env
-  DB_USERNAME: ${DB_USERNAME:-my_username}
-  DB_PASSWORD: ${DB_PASSWORD:-my_password}
-  SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-my_username}
-  SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-my_password}
-
 x-rabbit-env: &rabbit-env
   SPRING_RABBITMQ_HOST: rabbitmq
   SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-my_rabbit_user}
@@ -67,8 +61,10 @@ services:
       args:
         SERVICE: auth-service
     environment:
-      <<: [*app-env, *db-env, *rabbit-env]
+      <<: [*app-env, *rabbit-env]
       EUREKA_INSTANCE_HOSTNAME: auth-service
+      DB_USERNAME: &auth-db-user ${AUTH_DB_USERNAME:-${DB_USERNAME:-my_username}}
+      DB_PASSWORD: &auth-db-password ${AUTH_DB_PASSWORD:-${DB_PASSWORD:-my_password}}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/auth_db
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env (at least 32 bytes)}
       SPRING_JWT_SECRET: ${SECRET_KEY:?Set SECRET_KEY in .env (at least 32 bytes)}
@@ -90,8 +86,10 @@ services:
       args:
         SERVICE: user-service
     environment:
-      <<: [*app-env, *db-env, *rabbit-env]
+      <<: [*app-env, *rabbit-env]
       EUREKA_INSTANCE_HOSTNAME: user-service
+      DB_USERNAME: &user-db-user ${USER_DB_USERNAME:-${DB_USERNAME:-my_username}}
+      DB_PASSWORD: &user-db-password ${USER_DB_PASSWORD:-${DB_PASSWORD:-my_password}}
       AUTH_SERVICE_URL: http://auth-service:8085
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/user_db
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
@@ -129,8 +127,10 @@ services:
       args:
         SERVICE: inventory-service
     environment:
-      <<: [*app-env, *db-env]
+      <<: *app-env
       EUREKA_INSTANCE_HOSTNAME: inventory-service
+      DB_USERNAME: &inventory-db-user ${INVENTORY_DB_USERNAME:-${DB_USERNAME:-my_username}}
+      DB_PASSWORD: &inventory-db-password ${INVENTORY_DB_PASSWORD:-${DB_PASSWORD:-my_password}}
       INVENTORY_DB_URL: jdbc:postgresql://postgres-inventory:5432/inventory_db
       INVENTORY_SERVICE_KEY: ${INVENTORY_SERVICE_KEY:?Set INVENTORY_SERVICE_KEY in .env}
     depends_on:
@@ -146,8 +146,10 @@ services:
       args:
         SERVICE: order-service
     environment:
-      <<: [*app-env, *db-env]
+      <<: *app-env
       EUREKA_INSTANCE_HOSTNAME: order-service
+      DB_USERNAME: &order-db-user ${ORDER_DB_USERNAME:-${DB_USERNAME:-my_username}}
+      DB_PASSWORD: &order-db-password ${ORDER_DB_PASSWORD:-${DB_PASSWORD:-my_password}}
       ORDER_DB_URL: jdbc:postgresql://postgres-order:5432/order_db
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env (at least 32 bytes)}
       ORDER_SERVICE_KEY: ${ORDER_SERVICE_KEY:?Set ORDER_SERVICE_KEY in .env}
@@ -171,8 +173,10 @@ services:
       args:
         SERVICE: course-service
     environment:
-      <<: [*app-env, *db-env]
+      <<: *app-env
       EUREKA_INSTANCE_HOSTNAME: course-service
+      DB_USERNAME: &course-db-user ${COURSE_DB_USERNAME:-${DB_USERNAME:-my_username}}
+      DB_PASSWORD: &course-db-password ${COURSE_DB_PASSWORD:-${DB_PASSWORD:-my_password}}
       COURSE_DB_URL: jdbc:postgresql://postgres-course:5432/course_db
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
       AUTH_SERVICE_URL: http://auth-service:8085
@@ -234,8 +238,8 @@ services:
     container_name: postgres-auth
     environment:
       POSTGRES_DB: auth_db
-      POSTGRES_USER: ${DB_USERNAME:-my_username}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-my_password}
+      POSTGRES_USER: *auth-db-user
+      POSTGRES_PASSWORD: *auth-db-password
     volumes:
       - auth_db_data:/var/lib/postgresql/data
 
@@ -244,8 +248,8 @@ services:
     container_name: postgres-user
     environment:
       POSTGRES_DB: user_db
-      POSTGRES_USER: ${DB_USERNAME:-my_username}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-my_password}
+      POSTGRES_USER: *user-db-user
+      POSTGRES_PASSWORD: *user-db-password
     volumes:
       - user_db_data:/var/lib/postgresql/data
 
@@ -253,8 +257,8 @@ services:
     <<: *postgres
     environment:
       POSTGRES_DB: inventory_db
-      POSTGRES_USER: ${DB_USERNAME:-my_username}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-my_password}
+      POSTGRES_USER: *inventory-db-user
+      POSTGRES_PASSWORD: *inventory-db-password
     volumes:
       - inventory_db_data:/var/lib/postgresql/data
 
@@ -262,8 +266,8 @@ services:
     <<: *postgres
     environment:
       POSTGRES_DB: order_db
-      POSTGRES_USER: ${DB_USERNAME:-my_username}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-my_password}
+      POSTGRES_USER: *order-db-user
+      POSTGRES_PASSWORD: *order-db-password
     volumes:
       - order_db_data:/var/lib/postgresql/data
 
@@ -271,8 +275,8 @@ services:
     <<: *postgres
     environment:
       POSTGRES_DB: course_db
-      POSTGRES_USER: ${DB_USERNAME:-my_username}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-my_password}
+      POSTGRES_USER: *course-db-user
+      POSTGRES_PASSWORD: *course-db-password
     volumes:
       - course_db_data:/var/lib/postgresql/data
 

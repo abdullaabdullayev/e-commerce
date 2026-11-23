@@ -6,7 +6,7 @@ import { learningRequest, uuid } from "@/lib/learning";
 
 export async function submitLessonAction(_previous: string, form: FormData): Promise<string> {
   const session = await accountSession();
-  if (session.status !== 200 || !session.roles.includes("TEACHER")) return "Müəllim hesabı ilə daxil olun.";
+  if (session.status !== 200 || !session.roles.some(role => role === "TEACHER" || role === "ADMIN")) return "Müəllim hesabı ilə daxil olun.";
   const field = (key: string) => String(form.get(key) ?? "");
   const course = field("course");
   if (!uuid.test(course)) return "Kursu seçin.";

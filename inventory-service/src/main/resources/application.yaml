@@ -8,8 +8,12 @@ spring:
     name: inventory-service
   datasource:
     url: ${INVENTORY_DB_URL:jdbc:postgresql://localhost:5434/inventory_db}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    username: ${INVENTORY_DB_USERNAME:${DB_USERNAME}}
+    password: ${INVENTORY_DB_PASSWORD:${DB_PASSWORD}}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
   mvc:
     problemdetails:
       enabled: true

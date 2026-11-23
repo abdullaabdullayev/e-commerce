@@ -9,6 +9,6 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const session = await adminSession();
   if (session.status === 401) redirect("/hesab?next=/admin");
-  if (session.status !== 200) return <main className="shell section"><h1>{session.status === 403 ? "Admin səlahiyyəti tələb olunur" : "Hesab xidməti əlçatan deyil"}</h1><Link className="text-link" href="/hesab">Hesabıma qayıt</Link></main>;
+  if (session.status !== 200) return <div className="shell section"><h1>{session.status === 403 ? "Admin səlahiyyəti tələb olunur" : "Hesab xidməti əlçatan deyil"}</h1><Link className="text-link" href="/hesab?tab=overview">Hesabıma qayıt</Link></div>;
   return <AdminPanel label={session.label} />;
 }

@@ -16,6 +16,8 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
 
     Slice<Course> findByStatusOrderByCreatedAtDescIdAsc(CourseStatus status, Pageable pageable);
     Slice<Course> findAllByOrderByCreatedAtDescIdAsc(Pageable pageable);
+    Slice<Course> findByTitleContainingIgnoreCaseOrderByCreatedAtDescIdAsc(String title, Pageable page);
+    Slice<Course> findByStatusAndTitleContainingIgnoreCaseOrderByCreatedAtDescIdAsc(CourseStatus status, String title, Pageable page);
 
     @Query("""
         select c from Course c join CourseTeacher t on t.course = c

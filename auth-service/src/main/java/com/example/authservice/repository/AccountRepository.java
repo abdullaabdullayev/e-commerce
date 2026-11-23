@@ -18,11 +18,20 @@ public interface AccountRepository extends  JpaRepository<Account, Long> {
     Optional<Account> findByUsername(String username);
     boolean existsByUsername(String username);
 
-    @Query("select a.id from Account a order by a.id")
-    List<Long> listIds(Pageable page);
+    @Query("select count(a) from Account a join a.roles r where r = :role")
+    long countWithRole(Role role);
 
-    @Query("select a.id from Account a join a.roles r where r = :role order by a.id")
-    List<Long> listIdsWithRole(Role role, Pageable page);
+    @Query(value = "select 1 from pg_advisory_xact_lock(82350001)", nativeQuery = true)
+    int lockRoleChanges();
+
+    @Query("""
+        select a.id from Account a
+        where (:allRoles = true or :role member of a.roles)
+        and (:term = '' or locate(lower(:term), lower(a.email)) > 0
+             or locate(lower(:term), lower(a.username)) > 0 or str(a.id) = :term)
+        order by a.id
+        """)
+    List<Long> searchIds(String term, boolean allRoles, Role role, Pageable page);
 
     default Optional<Account> findByIdentifier(String identifier) {
         return identifier.contains("@") ? findByEmail(identifier) : findByUsername(identifier);

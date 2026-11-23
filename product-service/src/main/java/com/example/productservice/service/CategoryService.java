@@ -4,11 +4,9 @@ import com.example.productservice.dto.CategoryRequests;
 import com.example.productservice.model.Category;
 import com.example.productservice.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
+import com.example.productservice.repository.CatalogDocumentRepository;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.*;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,7 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class CategoryService {
     private final CategoryRepository repository;
-    private final MongoTemplate mongo;
+    private final CatalogDocumentRepository documents;
 
     public Category require(String id) {
         return repository.findById(id).orElseThrow(() ->
@@ -42,11 +40,8 @@ public class CategoryService {
 
     public Category update(String id, CategoryRequests.Update request) {
         try {
-            Category category = mongo.findAndModify(Query.query(Criteria.where("id").is(id)),
-                    new Update().set("name", request.name().trim()).set("slug", request.slug()),
-                    FindAndModifyOptions.options().returnNew(true), Category.class);
-            if (category == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found");
-            return category;
+            return documents.updateCategory(id, request.name().trim(), request.slug())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found"));
         } catch (DuplicateKeyException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Category slug already exists");
         }

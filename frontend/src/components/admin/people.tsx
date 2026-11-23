@@ -1,19 +1,17 @@
 "use client";
 import { useRef, useState } from "react";
-import { Action, api, Field, labels, Pager, Pending, str, useData, type Account, type Course, type Page } from "./shared";
+import { AccountPicker, Action, api, Field, labels, Pager, Pending, str, useData, type Account, type Course, type Page } from "./shared";
 
 type Entry = { enrollment:{studentAccountId:number;status:string}; profile:{firstName:string;lastName:string}|null };
 type Point = { id:string;type:"AWARD"|"CORRECTION";points:number;reason:string;createdAt:string };
 type History = {totalPoints:number; entries:Page<Point>};
 
-function Assignment({role,course,rev,done}:{role:"TEACHER"|"STUDENT";course:string;rev:number;done:()=>void}) {
-  const [page,setPage]=useState(0);
-  const {data,error}=useData<Account[]>("accounts?role="+role+"&page="+page,rev);
+function Assignment({role,course,rev,done,assigned}:{role:"TEACHER"|"STUDENT";course:string;rev:number;done:()=>void;assigned?:number[]}) {
+  const [open,setOpen]=useState(false);
   const teacher=role==="TEACHER";
-  return <details className="ap-editor"><summary>{teacher?"+ Müəllim təyin et":"+ Tələbəni kursa yaz"}</summary>
-    {data?<><Action button={teacher?"Təyin et":"Qeydiyyata al"} done={done} submit={f=>api("courses/"+course+"/"+(teacher?"teachers/":"students/")+str(f,"account"),"PUT",teacher?undefined:{status:"ACTIVE"})}>
-    <label>{labels[role]}<select key={page} name="account" required defaultValue=""><option value="">Hesabı seçin</option>{data.filter(a=>a.active).map(a=><option key={a.accountId} value={a.accountId}>{a.email||a.username} (#{a.accountId})</option>)}</select></label></Action>
-    <Pager page={page} set={setPage} next={data.length===50}/></>:<Pending error={error}/>}</details>;
+  return <details className="ap-editor" onToggle={e=>setOpen(e.currentTarget.open)}><summary>{teacher?"Müəllim təyin et":"Tələbəni kursa yaz"}</summary>
+    {open && <AccountPicker role={role} name="account" revision={rev} exclude={new Set(assigned)} button={teacher?"Təyin et":"Qeydiyyata al"} done={done}
+      submit={id=>api("courses/"+course+"/"+(teacher?"teachers/":"students/")+id,"PUT",teacher?undefined:{status:"ACTIVE"})}/>}</details>;
 }
 function ScoreForm({path,award,done}:{path:string;award?:Point;done:()=>void}){
   const attempt=useRef<{signature:string;id:string}|null>(null);
@@ -42,7 +40,7 @@ export function People({course,teachers,rev,done}:{course:Course;teachers:number
   return <section><h3>Müəllimlər</h3>
     {!teachers.length&&<p>Müəllim təyin edilməyib.</p>}
     {teachers.map(id=><TeacherRow key={id} id={id} rev={rev} prefix={prefix} done={done}/>)}
-    {editable&&<Assignment course={course.id} role="TEACHER" rev={rev} done={done}/>}
+    {editable&&<Assignment course={course.id} role="TEACHER" rev={rev} done={done} assigned={teachers}/>}
     <h3>Tələbələr</h3>{editable&&<Assignment course={course.id} role="STUDENT" rev={rev} done={done}/>}
     {data?<>{!data.content.length&&<p>Kursa qeydiyyat yoxdur.</p>}{data.content.map(({enrollment:e,profile})=>{
       const path=prefix+"/students/"+e.studentAccountId;
