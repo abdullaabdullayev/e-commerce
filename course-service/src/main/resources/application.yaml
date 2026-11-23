@@ -8,8 +8,8 @@ spring:
     import: "optional:file:../.env[.properties],optional:file:./.env[.properties]"
   datasource:
     url: ${COURSE_DB_URL:jdbc:postgresql://localhost:5436/course_db}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    username: ${COURSE_DB_USERNAME:${DB_USERNAME}}
+    password: ${COURSE_DB_PASSWORD:${DB_PASSWORD}}
   mvc:
     problemdetails:
       enabled: true

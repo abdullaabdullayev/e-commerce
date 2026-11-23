@@ -1,0 +1,5 @@
+package com.example.orderservice.model;
+
+public enum OrderStatus {
+    RESERVING, PENDING_PAYMENT, CONFIRMING, CONFIRMED, CANCELLING, CANCELLED, EXPIRED, REJECTED, PAYMENT_REVIEW
+}

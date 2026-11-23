@@ -40,6 +40,16 @@ public class CourseService {
         return PageResponse.from(courses.findAssigned(actor.id(), pageable).map(CourseMapper::course));
     }
 
+    public PageResponse<CourseResponse> adminList(Actor actor, String query, CourseStatus status, int page, int size) {
+        actor.requireAdmin();
+        var pageable = PageRequest.of(page, size);
+        String title = query.strip();
+        var result = status == null
+                ? courses.findByTitleContainingIgnoreCaseOrderByCreatedAtDescIdAsc(title, pageable)
+                : courses.findByStatusAndTitleContainingIgnoreCaseOrderByCreatedAtDescIdAsc(status, title, pageable);
+        return PageResponse.from(result.map(CourseMapper::course));
+    }
+
     @Transactional
     public CourseResponse create(Actor actor, CourseRequest request) {
         actor.requireAdmin();
