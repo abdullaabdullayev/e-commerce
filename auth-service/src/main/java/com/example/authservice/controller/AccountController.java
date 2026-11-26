@@ -40,6 +40,11 @@ public class AccountController {
         return accounts.replaceRoles(id, request.roles());
     }
 
+    @PutMapping({"/api/v1/auth/accounts/{id}/active", "/api/v1/admin/accounts/{id}/active"})
+    public AccountView active(@PathVariable @Positive long id, @Valid @RequestBody ActiveInput request) {
+        return accounts.setActive(id, request.active());
+    }
+
     @PostMapping("/api/v1/auth/bootstrap-admin")
     public AccountView bootstrap(@RequestHeader(value = "X-Admin-Bootstrap-Key", required = false) String supplied,
                                  @Valid @RequestBody BootstrapInput request) {

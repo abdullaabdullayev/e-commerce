@@ -2,6 +2,8 @@ package com.example.authservice.controller;
 
 import com.example.authservice.dto.AuthResponse;
 import com.example.authservice.dto.LoginRequest;
+import com.example.authservice.dto.RefreshRequest;
+import org.springframework.http.CacheControl;
 import com.example.authservice.dto.RegisterRequest;
 import com.example.authservice.dto.RegisterResponse;
 import com.example.authservice.service.AuthService;
@@ -35,5 +37,16 @@ public class AuthController {
         AuthResponse response = authService.login(request);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest request) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(authService.refresh(request.refreshToken()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody RefreshRequest request) {
+        authService.logout(request.refreshToken());
+        return ResponseEntity.noContent().build();
     }
 }
