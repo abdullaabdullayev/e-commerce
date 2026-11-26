@@ -6,6 +6,11 @@ spring:
     import: "optional:file:../.env[.properties],optional:file:./.env[.properties]"
   application:
     name: inventory-service
+  flyway:
+    # Demo seeds live in db/demo and load only with the "demo" profile (application-demo.yaml).
+    # Seeds applied by older versions came from db/migration; ignore them once they are gone.
+    locations: classpath:db/migration
+    ignore-migration-patterns: "*:missing"
   datasource:
     url: ${INVENTORY_DB_URL:jdbc:postgresql://localhost:5434/inventory_db}
     username: ${INVENTORY_DB_USERNAME:${DB_USERNAME}}
