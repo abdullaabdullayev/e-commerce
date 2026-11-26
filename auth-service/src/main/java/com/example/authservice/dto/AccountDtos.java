@@ -18,6 +18,7 @@ public final class AccountDtos {
 
     public record RolesInput(@NotEmpty Set<@NotNull Role> roles) {}
     public record BootstrapInput(@Positive long accountId) {}
+    public record ActiveInput(@NotNull Boolean active) {}
     public record CreateAccount(@Email @Size(max = 254) String email,
                                 @Pattern(regexp = "[a-z][a-z0-9._-]{2,39}") String username,
                                 @NotBlank @Size(min = 8, max = 72) String password,

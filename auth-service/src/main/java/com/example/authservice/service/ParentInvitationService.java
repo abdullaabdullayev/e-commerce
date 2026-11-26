@@ -25,8 +25,9 @@ public class ParentInvitationService {
     private static final SecureRandom RANDOM = new SecureRandom();
 
     @Transactional
-    public Issued issue(String email) {
-        if (accounts.existsByEmail(email)) throw new ResponseStatusException(HttpStatus.CONFLICT, "Account already exists");
+    public Issued issue(String requestedEmail) {
+        String email = Emails.normalize(requestedEmail);
+        if (accounts.existsByEmailIgnoreCase(email)) throw new ResponseStatusException(HttpStatus.CONFLICT, "Account already exists");
         byte[] bytes = new byte[32];
         RANDOM.nextBytes(bytes);
         String token = HexFormat.of().formatHex(bytes);

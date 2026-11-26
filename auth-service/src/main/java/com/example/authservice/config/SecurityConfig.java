@@ -2,6 +2,7 @@ package com.example.authservice.config;
 
 import com.example.authservice.auth.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -45,13 +46,18 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // Browsers reach the API through the Next.js proxy (same origin); only list origins
+    // that really call this service directly. Never combine "*" with credentials.
+    @Value("${app.cors.allowed-origins:http://localhost:3000}")
+    private List<String> allowedOrigins;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration c = new CorsConfiguration();
-        c.setAllowedOriginPatterns(List.of("*"));
+        c.setAllowedOrigins(allowedOrigins.stream().map(String::trim).filter(o -> !o.isEmpty() && !o.equals("*")).toList());
         c.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        c.setAllowedHeaders(List.of("*"));
-        c.setAllowCredentials(true);
+        c.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Admin-Bootstrap-Key"));
+        c.setAllowCredentials(false);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", c);
         return source;
