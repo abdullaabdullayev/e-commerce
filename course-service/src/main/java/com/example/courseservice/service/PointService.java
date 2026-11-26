@@ -25,8 +25,9 @@ public class PointService {
 
     @Transactional
     public PointResponse award(Actor actor, UUID courseId, long studentId, AwardRequest request) {
-        Course course = access.lock(courseId);
+        // Authorize before taking the course lock so outsiders cannot hold it.
         access.requireStaff(actor, courseId);
+        Course course = access.lock(courseId);
         Enrollment enrollment = requireEnrollment(courseId, studentId);
         var previous = points.findByEnrollmentIdAndRequestId(enrollment.getId(), request.requestId());
         if (previous.isPresent()) return replay(previous.get(), actor, PointType.AWARD,

@@ -16,6 +16,14 @@ public final class OrderModels {
     public record Order(UUID id, String customerSubject, String requestFingerprint, OrderStatus status,
                         BigDecimal amount, String currency, Instant expiresAt, String paymentReference,
                         OrderStatus cancelAs, Instant createdAt, List<Item> items) {}
+    /** Public representation: hides the owner subject and the idempotency fingerprint. */
+    public record OrderView(UUID id, OrderStatus status, BigDecimal amount, String currency, Instant expiresAt,
+                            String paymentReference, Instant createdAt, List<Item> items) {
+        public static OrderView from(Order order) {
+            return new OrderView(order.id(), order.status(), order.amount(), order.currency(), order.expiresAt(),
+                    order.paymentReference(), order.createdAt(), order.items());
+        }
+    }
     public record Payment(@NotBlank @Size(max = 200) String reference, @NotNull @Positive BigDecimal amount,
                           @NotBlank @Pattern(regexp = "[A-Z]{3}") String currency) {}
     public record ProductQuote(String id, String sku, String name, BigDecimal price, String currency, boolean active) {}

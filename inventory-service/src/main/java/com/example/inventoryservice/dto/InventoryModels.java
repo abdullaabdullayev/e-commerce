@@ -14,5 +14,6 @@ public final class InventoryModels {
                           @Min(1) @Max(1000000) int quantity) {}
     public record Reserve(@NotNull UUID id, @NotEmpty @Size(max = 50) List<@NotNull @Valid Line> items) {}
     public record Stock(String sku, long onHand, long reserved, long available) {}
+    public record Availability(String sku, long available) {}
     public record Reservation(UUID id, String status, Instant expiresAt, List<Line> items) {}
 }
