@@ -6,6 +6,11 @@ spring:
     name: course-service
   config:
     import: "optional:file:../.env[.properties],optional:file:./.env[.properties]"
+  flyway:
+    # Demo seeds live in db/demo and load only with the "demo" profile (application-demo.yaml).
+    # Seeds applied by older versions came from db/migration; ignore them once they are gone.
+    locations: classpath:db/migration
+    ignore-migration-patterns: "*:missing"
   datasource:
     url: ${COURSE_DB_URL:jdbc:postgresql://localhost:5436/course_db}
     username: ${COURSE_DB_USERNAME:${DB_USERNAME}}
