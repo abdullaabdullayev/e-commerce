@@ -12,8 +12,15 @@ public class InventoryController {
     private final InventoryService service;
     public InventoryController(InventoryService service) { this.service = service; }
 
+    // Public: shoppers only need availability, not warehouse totals.
     @GetMapping("/api/v1/stock/{sku}")
-    public Stock stock(@PathVariable String sku) { return service.stock(sku); }
+    public Availability stock(@PathVariable String sku) {
+        Stock stock = service.stock(sku);
+        return new Availability(stock.sku(), stock.available());
+    }
+
+    @GetMapping("/internal/v1/inventory/stock/{sku}")
+    public Stock internalStock(@PathVariable String sku) { return service.stock(sku); }
 
     @PostMapping("/internal/v1/inventory/receipts")
     public Stock receive(@Valid @RequestBody Receipt request) { return service.receive(request); }

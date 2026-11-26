@@ -68,7 +68,9 @@ public class CourseService {
 
     @Transactional
     public CourseResponse changeStatus(Actor actor, UUID id, CourseStatus status) {
-        Course course = access.lockAdminEditable(actor, id);
+        // Unlike content edits, a status change may also restore an archived course.
+        actor.requireAdmin();
+        Course course = access.lock(id);
         course.changeStatus(status);
         return CourseMapper.course(course);
     }

@@ -20,6 +20,8 @@ spring:
 
 catalog:
   admin-key: ${CATALOG_ADMIN_KEY:}
+  # Same secret Auth Service signs access tokens with; enables ADMIN-role catalog writes.
+  jwt-secret: ${SECRET_KEY:}
 
 eureka:
   instance:

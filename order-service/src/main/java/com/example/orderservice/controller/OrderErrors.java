@@ -11,6 +11,11 @@ public class OrderErrors {
     public ProblemDetail conflict() {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Order or payment reference conflicts with an existing record");
     }
+    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+    public ProblemDetail invalidParameters() {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid request parameters");
+    }
+
     @ExceptionHandler(RestClientException.class)
     public ProblemDetail upstream() {
         return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, "A required service is temporarily unavailable");

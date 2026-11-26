@@ -18,6 +18,7 @@ import static com.example.orderservice.dto.OrderModels.*;
 @Service
 public class OrderService {
     private static final Set<OrderStatus> PAID_OR_UNDER_REVIEW = Set.of(CONFIRMING, CONFIRMED, PAYMENT_REVIEW);
+    static final java.time.Duration RESERVING_TIMEOUT = java.time.Duration.ofMinutes(15);
 
     private final OrderTransactions store;
     private final ProductClient products;
@@ -95,6 +96,11 @@ public class OrderService {
         try {
             switch (order.status()) {
                 case RESERVING -> {
+                    if (order.createdAt().plus(RESERVING_TIMEOUT).isBefore(Instant.now())) {
+                        // Inventory stayed unreachable: give up, and release any reservation that did land.
+                        store.requestCancellation(id, REJECTED);
+                        return;
+                    }
                     Reservation reservation = inventory.reserve(id, order.items());
                     if (reservation == null || !reservation.status().equals("ACTIVE")) throw bad("Invalid inventory reservation");
                     store.pending(id, reservation.expiresAt());

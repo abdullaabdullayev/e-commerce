@@ -26,8 +26,9 @@ public class LessonReportService {
 
     @Transactional
     public SessionView recordSession(Actor actor, UUID courseId, NewSession request) {
-        Course course = access.lock(courseId);
+        // Authorize before taking the course lock so outsiders cannot hold it.
         access.requireStaff(actor, courseId);
+        Course course = access.lock(courseId);
         if (course.getStatus() != CourseStatus.PUBLISHED) throw conflict("Publish the course before recording a session");
         var lesson = lessons.findByIdAndCourseId(request.lessonId(), courseId).orElseThrow(() -> notFound("Lesson"));
         if (lesson.isArchived()) throw conflict("Lesson is archived");
@@ -84,8 +85,8 @@ public class LessonReportService {
     }
 
     private LessonSession editableSession(Actor actor, UUID courseId, UUID sessionId) {
-        Course course = access.lock(courseId);
         var session = requireAuthor(actor, courseId, sessionId);
+        Course course = access.lock(courseId);
         if (course.getStatus() != CourseStatus.PUBLISHED) throw conflict("Course is not published");
         return session;
     }
