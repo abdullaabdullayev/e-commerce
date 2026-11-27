@@ -5,11 +5,6 @@
 **/.gradle
 **/build
 **/out
-**/node_modules
-**/.next
-**/.pnpm-store
-# Frontend runs locally and is not part of the Spring Boot images.
-frontend
 **/*.log
 .env
 .env.*

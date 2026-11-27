@@ -26,7 +26,7 @@ student points and parent access), built with **Spring Boot 3** and **Spring Clo
 
 ```mermaid
 flowchart LR
-    client([Client / Next.js frontend]) --> gw[Gateway :8080]
+    client([Client]) --> gw[Gateway :8080]
     gw -.-> eureka[(Eureka discovery)]
 
     gw --> auth[Auth service]
@@ -53,12 +53,11 @@ flowchart LR
 ```
 
 Detailed write-ups:
-[registration flow with outbox](docs/registration-flow.md) ·
-[product catalog rules](docs/product-catalog.md) ·
-[inventory and order flow](docs/sales-flow.md) ·
-[gateway-only access](docs/gateway-access.md) ·
-[course service](course-service/README.md) ·
-[frontend](frontend/README.md)
+- [registration flow with outbox](docs/registration-flow.md)
+- [product catalog rules](docs/product-catalog.md)
+- [inventory and order flow](docs/sales-flow.md)
+- [gateway-only access](docs/gateway-access.md)
+- [course service](course-service/README.md)
 
 ## Services
 
@@ -81,7 +80,7 @@ and delegate to services; cross-service calls happen outside database transactio
 
 Java 21 · Spring Boot 3.5 · Spring Cloud 2025.0 (Gateway, Eureka, OpenFeign) · Spring Security +
 JWT · Spring Data JPA / Hibernate · Spring Data MongoDB · Flyway · RabbitMQ · JUnit 5, Mockito,
-Testcontainers · Gradle multi-module · Docker Compose · Next.js + TypeScript (frontend)
+Testcontainers · Gradle multi-module · Docker Compose
 
 ## Getting started
 
@@ -143,5 +142,4 @@ Endpoints under `/internal/**` are used only for service-to-service calls and ar
 - [x] CI pipeline with automated tests
 - [ ] OpenAPI / Swagger documentation
 - [ ] Payment provider integration
-- [ ] Teacher and student frontend screens
 - [ ] Distributed tracing and metrics (Micrometer, Zipkin)
