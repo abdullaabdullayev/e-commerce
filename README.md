@@ -1,113 +1,147 @@
-# E-Commerce
+# E-Commerce & Learning Platform
 
-> 🚧 **This project is under active development.** Features, APIs and structure may change at any time, and parts of it are incomplete or not yet production-ready.
+[![CI](https://github.com/abdullaabdullayev/e-commerce/actions/workflows/ci.yml/badge.svg)](https://github.com/abdullaabdullayev/e-commerce/actions/workflows/ci.yml)
+![Java 21](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-6DB33F?logo=springboot&logoColor=white)
+![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.0-6DB33F?logo=spring&logoColor=white)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?logo=rabbitmq&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-7-47A248?logo=mongodb&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker%20Compose-2496ED?logo=docker&logoColor=white)
 
-A microservices-based education and e-commerce backend built with Spring Boot and Spring Cloud.
+A microservices backend for an online store combined with a learning platform (courses, lessons,
+student points and parent access), built with **Spring Boot 3** and **Spring Cloud**.
 
-Courses: [Course service setup, roles and lesson APIs](course-service/README.md).
+## Highlights
 
-Step-by-step learning: [Reliable registration with RabbitMQ and an outbox](docs/registration-flow.md).
+- **API Gateway + service discovery**: all public traffic enters through Spring Cloud Gateway; services register in Eureka and call each other with OpenFeign / load-balanced clients.
+- **Security**: JWT access tokens, refresh tokens stored as hashes, logout, login rate limiting, account deactivation, role-based access (`CUSTOMER`, `ADMIN`, `TEACHER`, `STUDENT`, `PARENT`), service-to-service keys for `/internal/**` endpoints.
+- **Reliable messaging**: registration events are written to a **transactional outbox** and relayed to **RabbitMQ**; consumers retry and park failures in a **dead-letter queue** that admins can replay.
+- **Checkout flow**: order service snapshots prices from the catalog, **reserves stock** in inventory, then commits or releases the reservation (with reservation timeout).
+- **Database per service**: five PostgreSQL databases with **Flyway** migrations, MongoDB for the product catalog, S3-compatible storage for course materials.
+- **Containerised**: one `docker compose up` starts 8 services and all infrastructure in a private network; only the gateway is exposed.
+- **Tested in CI**: unit tests and Testcontainers-based persistence tests run on every push via GitHub Actions.
 
-Sales business logic: [Product catalog rules and API](docs/product-catalog.md).
+## Architecture
 
-Stock and checkout: [Inventory and order business flow](docs/sales-flow.md).
+```mermaid
+flowchart LR
+    client([Client / Next.js frontend]) --> gw[Gateway :8080]
+    gw -.-> eureka[(Eureka discovery)]
 
-Deployment: [External access through Gateway only](docs/gateway-access.md).
+    gw --> auth[Auth service]
+    gw --> user[User service]
+    gw --> product[Product service]
+    gw --> inventory[Inventory service]
+    gw --> order[Order service]
+    gw --> course[Course service]
 
-Frontend: [Next.js + TypeScript + Tailwind CSS](frontend/README.md). Run `npm run dev`
-inside `frontend` and open `http://localhost:3000`.
+    auth -- outbox events --> mq{{RabbitMQ}}
+    mq --> user
+    order -- price snapshot --> product
+    order -- reserve / commit / release --> inventory
+    course --> auth
+    course --> user
+
+    auth --- authdb[(PostgreSQL auth_db)]
+    user --- userdb[(PostgreSQL user_db)]
+    inventory --- invdb[(PostgreSQL inventory_db)]
+    order --- orderdb[(PostgreSQL order_db)]
+    course --- coursedb[(PostgreSQL course_db)]
+    course --- s3[(S3 storage)]
+    product --- mongo[(MongoDB product_db)]
+```
+
+Detailed write-ups:
+[registration flow with outbox](docs/registration-flow.md) ·
+[product catalog rules](docs/product-catalog.md) ·
+[inventory and order flow](docs/sales-flow.md) ·
+[gateway-only access](docs/gateway-access.md) ·
+[course service](course-service/README.md) ·
+[frontend](frontend/README.md)
 
 ## Services
 
-| Service             | Port | Description                                              |
-|---------------------|------|----------------------------------------------------------|
-| `discovery-service` | 8761 | Eureka service registry                                  |
-| `auth-service`      | 8085 | Registration, login, JWT access and refresh tokens       |
-| `user-service`      | 8081 | User profiles and parent–student relationships            |
-| `user-api`          | –    | Shared registration event contract                       |
-| `gateway-service`   | 8080 | Public API entry point                                 |
-| `product-service`   | 8083 | Product catalog, MongoDB                               |
-| `inventory-service` | 8084 | Stock and reservations                                 |
-| `order-service`     | 8086 | Orders and checkout                                    |
-| `course-service`    | 8087 | Admin syllabus, direct enrollment and student points   |
+| Service             | Port | Responsibility                                            | Storage |
+|---------------------|------|-----------------------------------------------------------|---------|
+| `gateway-service`   | 8080 | Public API entry point, routing                           | – |
+| `discovery-service` | 8761 | Eureka service registry                                   | – |
+| `auth-service`      | 8085 | Registration, login, JWT access/refresh tokens, accounts  | PostgreSQL |
+| `user-service`      | 8081 | User profiles, parent–student links, registration DLQ     | PostgreSQL |
+| `product-service`   | 8083 | Product catalog and categories                            | MongoDB |
+| `inventory-service` | 8084 | Stock, receipts and reservations                          | PostgreSQL |
+| `order-service`     | 8086 | Orders and checkout                                       | PostgreSQL |
+| `course-service`    | 8087 | Courses, syllabus, enrollment, lesson reports, points     | PostgreSQL + S3 |
+| `user-api`          | –    | Shared registration event contract (library module)       | – |
 
-## Tech Stack
+Each service owns its data: no service reads another service's database. Controllers validate input
+and delegate to services; cross-service calls happen outside database transactions.
 
-- Java 21
-- Spring Boot 3.5.x, Spring Cloud (Eureka, OpenFeign)
-- Spring Security with JWT
-- Spring Data JPA, PostgreSQL
-- Gradle (multi-module)
+## Tech stack
 
-## Data ownership
+Java 21 · Spring Boot 3.5 · Spring Cloud 2025.0 (Gateway, Eureka, OpenFeign) · Spring Security +
+JWT · Spring Data JPA / Hibernate · Spring Data MongoDB · Flyway · RabbitMQ · JUnit 5, Mockito,
+Testcontainers · Gradle multi-module · Docker Compose · Next.js + TypeScript (frontend)
 
-| Service | Database | Persistent data |
-|---|---|---|
-| Auth | PostgreSQL `auth_db` | Accounts, roles, invitations, refresh tokens and the registration outbox |
-| User | PostgreSQL `user_db` | Profiles and family links |
-| Course | PostgreSQL `course_db` | Courses, enrollments, syllabus, reports and points |
-| Inventory | PostgreSQL `inventory_db` | Stock, receipts and reservations |
-| Order | PostgreSQL `order_db` | Customer orders, item price snapshots and payment references |
-| Product | MongoDB `product_db` | Products and categories |
-
-Each PostgreSQL service owns its Flyway migrations and accesses its tables through Spring Data JPA repositories. Controllers validate HTTP input and delegate to services. Order calls Catalog and Inventory outside database transactions. Gateway and Discovery run without application databases.
-
-For independent PostgreSQL logins, set `<SERVICE>_DB_USERNAME` and `<SERVICE>_DB_PASSWORD` for `AUTH`, `USER`, `COURSE`, `INVENTORY` or `ORDER`. Each pair defaults to the existing `DB_USERNAME` and `DB_PASSWORD`. For an initialized volume, provision the matching PostgreSQL role and grants before changing the application's credentials.
-
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
-- JDK 21
-- Docker (for PostgreSQL)
+- Docker with Docker Compose
+- JDK 21 (only to run services from the IDE or to run tests)
 
-### 1. Configure the environment
-
-Configure the root `.env`. See [course environment additions](course-service/.env.example)
-for the LMS keys. Set the JWT secret and service keys, and keep
-database/RabbitMQ credentials consistent with existing volumes. Compose runs the
-whole application in a private network; only Gateway's port 8080 is published.
-
-### 2. Set environment variables
-
-| Variable             | Used by                      | Description                                  |
-|----------------------|------------------------------|----------------------------------------------|
-| `DB_USERNAME`        | `auth-service`, `user-service` | Database username                          |
-| `DB_PASSWORD`        | `auth-service`, `user-service` | Database password                          |
-| `SECRET_KEY`         | `auth-service`               | JWT signing key (at least 32 characters)     |
-| `ACCESS_EXPIRATION`  | `auth-service`               | Access token lifetime in milliseconds        |
-| `REFRESH_EXPIRATION` | `auth-service`               | Refresh token lifetime in milliseconds       |
-
-### 3. Run the services through Docker
+### Run everything with Docker
 
 ```bash
-docker compose config --quiet
+cp .env.example .env        # then replace every "change-me" value
 docker compose up -d --build
 ```
 
-Send requests to `http://localhost:8080/api/v1/...`. Stop any copies previously
-started through the IDE; container isolation does not close host Java processes.
-See [gateway access](docs/gateway-access.md) for internal networking and configuration.
+The API is available at `http://localhost:8080/api/v1/...`. Only the gateway publishes a port;
+see [gateway access](docs/gateway-access.md) for networking details.
 
-## API (current)
+To load demo data, start the services with the `demo` Spring profile
+(`SPRING_PROFILES_ACTIVE=demo`).
 
-| Method | Endpoint                | Description        |
-|--------|-------------------------|--------------------|
-| POST   | `/api/v1/auth/register` | Register a new user |
-| POST   | `/api/v1/auth/login`    | Log in, returns access and refresh tokens |
+### Run the tests
 
-## Status
+```bash
+./gradlew test
+```
 
-- [x] Service discovery
-- [x] User registration and login
-- [ ] Refresh token and logout endpoints
-- [ ] Input validation and proper error responses
-- [x] API gateway
-- [x] Product, inventory and order services
-- [x] Course, admin-managed syllabus, direct enrollment and student point APIs
+Persistence tests use Testcontainers and are skipped automatically when Docker is not available.
+
+### Configuration
+
+All settings come from the root `.env` file (see [`.env.example`](.env.example)). Each PostgreSQL
+service accepts its own `<SERVICE>_DB_USERNAME` / `<SERVICE>_DB_PASSWORD` (for `AUTH`, `USER`,
+`COURSE`, `INVENTORY`, `ORDER`), falling back to `DB_USERNAME` / `DB_PASSWORD`.
+
+## API overview
+
+All endpoints are served through the gateway under `/api/v1`.
+
+| Area | Endpoints |
+|---|---|
+| Auth | `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `GET /auth/me` |
+| Users | `GET /users/me`, `GET /users/{id}`, `GET /parent/children` |
+| Catalog | `GET/POST /products`, `GET/PUT/DELETE /products/{id}`, `POST /products/{id}/activate`, `GET/POST /categories` |
+| Stock | `GET /stock/{sku}` |
+| Orders | `POST /orders`, `GET /orders`, `GET /orders/{id}`, `POST /orders/{id}/cancel` |
+| Courses | `GET /courses`, `GET /courses/{id}`, `GET /courses/mine`, `GET /courses/my-learning`, syllabus, lesson sessions and reports, points |
+| Admin | `/admin/courses/**`, `/admin/parent-invitations`, registration DLQ replay |
+
+Endpoints under `/internal/**` are used only for service-to-service calls and are not routed by the gateway.
+
+## Roadmap
+
+- [x] Service discovery and API gateway
+- [x] Registration, login, refresh token and logout
+- [x] Reliable registration events (outbox + RabbitMQ + DLQ)
+- [x] Product catalog, inventory reservations and checkout
+- [x] Courses, syllabus, enrollment, lesson reports and student points
+- [x] CI pipeline with automated tests
+- [ ] OpenAPI / Swagger documentation
+- [ ] Payment provider integration
 - [ ] Teacher and student frontend screens
-- [ ] Tests
-
-## License
-
-Not specified yet.
+- [ ] Distributed tracing and metrics (Micrometer, Zipkin)
